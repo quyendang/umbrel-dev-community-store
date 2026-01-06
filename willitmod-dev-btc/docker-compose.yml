@@ -1,0 +1,139 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: axebtc-app
+      APP_PORT: 3000
+      JWT_SECRET: "${JWT_SECRET}"
+    networks:
+      - umbrel_main_network
+
+  init:
+    image: alpine:3.22.1
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+      - ${APP_DATA_DIR}:/appdata
+      - ${APP_DATA_DIR}/data/templates:/data/templates:ro
+    environment:
+      APPS_SUBNET: "${NETWORK_IP}/16"
+      RPC_USER: "btc"
+      RPC_PASSWORD: "${APP_PASSWORD}"
+      BTC_P2P_PORT: "28333"
+      BTC_RPC_PORT: "28332"
+      BTC_ZMQ_HASHBLOCK_PORT: "28335"
+      PAYOUT_ADDRESS: "CHANGEME_BTC_PAYOUT_ADDRESS"
+    command:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+
+        apk add --no-cache envsubst curl >/dev/null
+
+        # Persist Umbrel's JWT secret into ${APP_DATA_DIR}/.env so that SSH restarts
+        # (without Umbrel's exports.sh) don't boot app_proxy with an empty JWT_SECRET.
+        if [ -n "${JWT_SECRET:-}" ]; then
+          envfile="/appdata/.env"
+          tmp="/appdata/.env.tmp"
+          if [ -f "$$envfile" ]; then
+            grep -v '^JWT_SECRET=' "$$envfile" > "$$tmp" || true
+          else
+            : > "$$tmp"
+          fi
+          printf "JWT_SECRET=%s\n" "${JWT_SECRET}" >> "$$tmp"
+          chmod 600 "$$tmp" || true
+          chown 1000:1000 "$$tmp" || true
+          mv "$$tmp" "$$envfile"
+        fi
+
+        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
+
+        # Umbrel may create settings.yml as root during update/install; ensure it stays writable.
+        touch /appdata/settings.yml
+        chown 1000:1000 /appdata/settings.yml || true
+
+        if [ ! -f /data/node/bitcoin.conf ]; then
+          envsubst < /data/templates/bitcoin.conf.template > /data/node/bitcoin.conf
+          chown -R 1000:1000 /data/node
+        else
+          # Keep peer limit high on existing installs too.
+          if grep -q '^maxconnections=' /data/node/bitcoin.conf; then
+            sed -i 's/^maxconnections=.*/maxconnections=256/' /data/node/bitcoin.conf
+          else
+            echo '' >> /data/node/bitcoin.conf
+            echo 'maxconnections=256' >> /data/node/bitcoin.conf
+          fi
+          chown 1000:1000 /data/node/bitcoin.conf || true
+        fi
+
+        if [ ! -f /data/pool/config/ckpool.conf ]; then
+          envsubst < /data/templates/ckpool.conf.template > /data/pool/config/ckpool.conf
+          chown -R 1000:1000 /data/pool
+        fi
+
+  bitcoind:
+    image: ghcr.io/getumbrel/umbrel-bitcoin:v1.1.0
+    user: "1000:1000"
+    restart: unless-stopped
+    stop_grace_period: 15m30s
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    volumes:
+      - ${APP_DATA_DIR}/data/node:/data
+      - ${APP_DATA_DIR}/data/templates/bitcoind-entrypoint.sh:/bitcoind-entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/bitcoind-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "bitcoin-cli -datadir=/data getblockchaininfo >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 2m
+
+  ckpool:
+    image: ghcr.io/getumbrel/docker-ckpool-solo:590fb2a
+    command: "-k -B -L -c /config/ckpool.conf"
+    user: "1000:1000"
+    depends_on:
+      - bitcoind
+    restart: on-failure
+    stop_grace_period: 30s
+    ports:
+      - "6789:3333/tcp"
+    volumes:
+      - ${APP_DATA_DIR}/data/pool/config:/config:ro
+      - ${APP_DATA_DIR}/data/pool/www:/www
+
+  app:
+    image: ghcr.io/willitmod/axebtc-app-umbrel-dev:0.7.3
+    user: "1000:1000"
+    restart: on-failure
+    stop_grace_period: 30s
+    depends_on:
+      - bitcoind
+      - ckpool
+    networks:
+      default:
+        aliases:
+          - axebtc-app
+      umbrel_main_network:
+        aliases:
+          - axebtc-app
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+    environment:
+      BTC_RPC_HOST: "bitcoind"
+      BTC_RPC_PORT: "28332"
+      BTC_RPC_USER: "btc"
+      BTC_RPC_PASS: "${APP_PASSWORD}"
+      CKPOOL_STATUS_DIR: "/data/pool/www/pool"
+      APP_CHANNEL: "DEV"
+      BITCOIND_IMAGE: "ghcr.io/getumbrel/umbrel-bitcoin:v1.1.0"
+      CKPOOL_IMAGE: "ghcr.io/getumbrel/docker-ckpool-solo:590fb2a"
+      STATIC_DIR: "/app/static"
+
+networks:
+  umbrel_main_network:
+    external: true
+    name: umbrel_main_network

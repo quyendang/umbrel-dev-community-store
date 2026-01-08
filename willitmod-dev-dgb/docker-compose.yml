@@ -429,9 +429,10 @@ services:
               printf '%s\n' 'CREATE TABLE poolstats (id BIGSERIAL PRIMARY KEY NOT NULL, poolid TEXT NOT NULL, connectedminers INT NOT NULL, poolhashrate DOUBLE PRECISION NOT NULL, networkhashrate DOUBLE PRECISION NOT NULL, networkdifficulty DOUBLE PRECISION NOT NULL, lastnetworkblocktime TIMESTAMP, blockheight BIGINT NOT NULL, connectedpeers INT NOT NULL, sharespersecond INT NOT NULL, created TIMESTAMP NOT NULL);'
               printf '%s\n' 'CREATE INDEX IX_poolstats_poolid_created ON poolstats(poolid, created);'
               printf '\n'
-              printf '%s\n' 'CREATE TABLE minerstats (id BIGSERIAL PRIMARY KEY NOT NULL, poolid TEXT NOT NULL, miner TEXT NOT NULL, hashrate DOUBLE PRECISION NOT NULL, sharespersecond INT NOT NULL, created TIMESTAMP NOT NULL);'
+              printf '%s\n' 'CREATE TABLE minerstats (id BIGSERIAL PRIMARY KEY NOT NULL, poolid TEXT NOT NULL, miner TEXT NOT NULL, worker TEXT, hashrate DOUBLE PRECISION NOT NULL, sharespersecond INT NOT NULL, created TIMESTAMP NOT NULL);'
               printf '%s\n' 'CREATE INDEX IX_minerstats_poolid_created ON minerstats(poolid, created);'
               printf '%s\n' 'CREATE INDEX IX_minerstats_poolid_miner_created ON minerstats(poolid, miner, created);'
+              printf '%s\n' 'CREATE INDEX IX_minerstats_poolid_miner_worker_created ON minerstats(poolid, miner, worker, created);'
               printf '\n'
             } > /data/templates/miningcore-createdb.sql
           fi
@@ -442,6 +443,11 @@ services:
         if ! psql -h "$$DB_HOST" -p 5432 -U "$$DB_USER" -d "$$DB_NAME" -tA -c "SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='shares' AND column_name='actualdifficulty';" 2>/dev/null | grep -q '^1$'; then
           echo "[axedgb] Migrating DB: adding shares.actualdifficulty"
           psql -v ON_ERROR_STOP=1 -h "$$DB_HOST" -p 5432 -U "$$DB_USER" -d "$$DB_NAME" -c "ALTER TABLE shares ADD COLUMN actualdifficulty DOUBLE PRECISION;" >/dev/null
+        fi
+        if ! psql -h "$$DB_HOST" -p 5432 -U "$$DB_USER" -d "$$DB_NAME" -tA -c "SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='minerstats' AND column_name='worker';" 2>/dev/null | grep -q '^1$'; then
+          echo "[axedgb] Migrating DB: adding minerstats.worker"
+          psql -v ON_ERROR_STOP=1 -h "$$DB_HOST" -p 5432 -U "$$DB_USER" -d "$$DB_NAME" -c "ALTER TABLE minerstats ADD COLUMN worker TEXT;" >/dev/null
+          psql -v ON_ERROR_STOP=1 -h "$$DB_HOST" -p 5432 -U "$$DB_USER" -d "$$DB_NAME" -c "CREATE INDEX IF NOT EXISTS IX_minerstats_poolid_miner_worker_created ON minerstats(poolid, miner, worker, created);" >/dev/null
         fi
 
         # Seed an initial poolstats row so Miningcore's API does not error before the first stats tick.
@@ -504,7 +510,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/config/coins.json:/app/coins.json:ro
 
   app:
-    image: ghcr.io/willitmod/axedgb-app:0.8.99
+    image: ghcr.io/willitmod/axedgb-app:0.9.0
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

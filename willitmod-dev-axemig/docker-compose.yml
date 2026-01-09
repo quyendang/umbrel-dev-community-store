@@ -7,7 +7,7 @@ services:
       APP_PORT: 12150
 
   server:
-    image: ghcr.io/willitmod/axemig:0.1.12
+    image: ghcr.io/willitmod/axemig:0.1.13
     restart: on-failure
     stop_grace_period: 30s
     init: true
@@ -15,7 +15,7 @@ services:
       AXEMIG_HOME: /data
       AXEMIG_PORT: 12150
       AXEMIG_HOST: 0.0.0.0
-      AXEMIG_HELPER_IMAGE: ghcr.io/willitmod/axemig:0.1.12
+      AXEMIG_HELPER_IMAGE: ghcr.io/willitmod/axemig:0.1.13
     volumes:
       - ${APP_DATA_DIR}/data:/data
       - /var/run/docker.sock:/var/run/docker.sock

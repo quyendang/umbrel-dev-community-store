@@ -343,6 +343,115 @@ services:
           fi
         fi
 
+        # After any regeneration/normalization, always attempt to apply user-saved settings (single-pass).
+        # This avoids the "first restart fixes schema but keeps default payout" issue.
+        boot_repair_dir="/data/ui/state"
+        boot_repair="$$boot_repair_dir/boot_repair.json"
+        mkdir -p "$$boot_repair_dir" || true
+
+        applied_addr=""
+        desired_addr=""
+        applied_settings="0"
+        stratum_locked="0"
+        mc_repaired="0"
+        if [ "$$regen_mc" = "1" ]; then mc_repaired="1"; fi
+
+        if command -v jq >/dev/null 2>&1 && jq -e '.' >/dev/null 2>&1 < "$$miningcore_conf"; then
+          settings="/data/ui/state/pool_settings.json"
+          if [ -f "$$settings" ] && jq -e '.' >/dev/null 2>&1 < "$$settings"; then
+            desired_addr="$(jq -r '.payoutAddress // empty' "$$settings" | tr -d ' \t\r\n')"
+            desired_mindiff="$(jq -r '.mindiff // empty' "$$settings" | tr -d ' \t\r\n')"
+            desired_startdiff="$(jq -r '.startdiff // empty' "$$settings" | tr -d ' \t\r\n')"
+            desired_maxdiff="$(jq -r '.maxdiff // empty' "$$settings" | tr -d ' \t\r\n')"
+
+            if ! echo "$$desired_mindiff" | grep -qE '^[0-9]+(\\.[0-9]+)?$$'; then desired_mindiff=""; fi
+            if ! echo "$$desired_startdiff" | grep -qE '^[0-9]+(\\.[0-9]+)?$$'; then desired_startdiff=""; fi
+            if ! echo "$$desired_maxdiff" | grep -qE '^[0-9]+(\\.[0-9]+)?$$'; then desired_maxdiff=""; fi
+
+            if echo "$$desired_addr" | grep -qE '^[DS][1-9A-HJ-NP-Za-km-z]{25,60}$$'; then
+              echo "[axedgb] Applying payout address + varDiff settings from $$settings (post-repair pass)"
+              tmp_apply="/data/pool/config/miningcore.json.tmp_apply2"
+              jq --arg addr "$$desired_addr" \
+                 --argjson mindiff "$${desired_mindiff:-0}" \
+                 --argjson startdiff "$${desired_startdiff:-0}" \
+                 --argjson maxdiff "$${desired_maxdiff:-0}" \
+                 '
+                 def apply_port(p):
+                   p
+                   | .listenAddress = "0.0.0.0"
+                   | (if ($$startdiff > 0) then .difficulty = $$startdiff else . end)
+                   | (if ($$mindiff > 0) then .varDiff.minDiff = $$mindiff else . end)
+                   | (if ($$maxdiff > 0) then .varDiff.maxDiff = $$maxdiff else .varDiff.maxDiff = null end)
+                   | (.varDiff.targetTime = 7)
+                   | (.varDiff.retargetTime = 15)
+                   | (.varDiff.variancePercent = 20);
+
+                 (.pools |= (if type=="array" then map(
+                   if (.id=="dgb-sha256-1") then
+                     (.enabled = true)
+                     | (.address = $$addr)
+                     | (.ports |= (if type=="object" then with_entries(.value |= (if type=="object" then apply_port(.) else . end)) else . end))
+                   elif (.id=="dgb-scrypt-1") then
+                     (.enabled = true)
+                     | (.address = $$addr)
+                   else . end
+                 ) else . end))
+                 ' "$$miningcore_conf" > "$$tmp_apply" && mv "$$tmp_apply" "$$miningcore_conf"
+              applied_settings="1"
+            fi
+          fi
+
+          # Safety: if payout is empty/placeholder/bech32: lock Stratum to localhost.
+          if jq -r '.pools[]? | select(.id=="dgb-sha256-1" or .id=="dgb-scrypt-1") | (.address // "")' "$$miningcore_conf" | grep -qiE '^(dgb1|)$|^D596YFweJQuHY1BbjazZYmAbt8jJPbKehC$'; then
+            stratum_locked="1"
+            tmp3="/data/pool/config/miningcore.json.tmp_lock"
+            jq '
+              (.pools[]? | select(.id=="dgb-sha256-1" or .id=="dgb-scrypt-1")
+                | .enabled=true
+                | .address="D596YFweJQuHY1BbjazZYmAbt8jJPbKehC"
+                | (.ports |= (if type=="object" then with_entries(.value |= (if type=="object" then (.listenAddress="127.0.0.1") else . end)) else . end))
+              ) | .
+            ' "$$miningcore_conf" > "$$tmp3" && mv "$$tmp3" "$$miningcore_conf"
+          fi
+
+          applied_addr="$(jq -r '.pools[]? | select(.id=="dgb-sha256-1") | (.address // empty)' "$$miningcore_conf" | head -n 1)"
+
+          # Final validation: ensure miningcore.json is valid and has required keys.
+          if ! jq -e 'type=="object" and (.pools|type=="array") and (.api|type=="object") and (.persistence.postgres|type=="object")' "$$miningcore_conf" >/dev/null 2>&1; then
+            echo "[axedgb] ERROR: miningcore.json invalid after repair/apply; regenerating and locking Stratum"
+            ts="$$(date +%s)"
+            mv "$$miningcore_conf" "$$miningcore_conf.broken.$$ts" 2>/dev/null || true
+            envsubst < "$$miningcore_tpl" > "$$miningcore_conf"
+            tmp_lock="/data/pool/config/miningcore.json.tmp_lock2"
+            jq '
+              (.pools[]? | select(.id=="dgb-sha256-1" or .id=="dgb-scrypt-1")
+                | .enabled=true
+                | .address="D596YFweJQuHY1BbjazZYmAbt8jJPbKehC"
+                | (.ports |= (if type=="object" then with_entries(.value |= (if type=="object" then (.listenAddress="127.0.0.1") else . end)) else . end))
+              ) | .
+            ' "$$miningcore_conf" > "$$tmp_lock" && mv "$$tmp_lock" "$$miningcore_conf"
+            chown -R 1000:1000 /data/pool/config || true
+            mc_repaired="1"
+            applied_settings="0"
+            stratum_locked="1"
+            applied_addr="$(jq -r '.pools[]? | select(.id=="dgb-sha256-1") | (.address // empty)' "$$miningcore_conf" | head -n 1)"
+          fi
+        fi
+
+        # Write a small, UI-readable report for troubleshooting.
+        if command -v jq >/dev/null 2>&1; then
+          jq -n \
+            --arg ts "$$(date -Is 2>/dev/null || date)" \
+            --arg repaired "$$mc_repaired" \
+            --arg applied "$$applied_settings" \
+            --arg desired "$$desired_addr" \
+            --arg addr "$$applied_addr" \
+            --arg locked "$$stratum_locked" \
+            '{t:$ts,miningcoreRepaired:($repaired=="1"),settingsApplied:($applied=="1"),desiredPayout:$desired,appliedPayout:$addr,stratumLocked:($locked=="1")}' \
+            > "$$boot_repair" 2>/dev/null || true
+          chown 1000:1000 "$$boot_repair" 2>/dev/null || true
+        fi
+
         # Ensure Miningcore has a coins.json available at runtime.
         # Our Miningcore container expects this file next to the binary; without it, the API can crash on startup.
         if [ ! -f /data/pool/config/coins.json ]; then
@@ -526,7 +635,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/config/coins.json:/app/coins.json:ro
 
   app:
-    image: ghcr.io/willitmod/axedgb-app:0.9.2
+    image: ghcr.io/willitmod/axedgb-app:0.9.3
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

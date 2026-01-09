@@ -68,10 +68,19 @@ services:
 
         mkdir -p /data/node /data/pool/config /data/pool/postgres /data/templates
 
-        # Ensure dbcache preset exists (default 1024MB). The UI can change this later.
+        # Ensure dbcache preset exists. The UI can change this later.
         if [ ! -f /data/node/.dbcache_mb ]; then
-          echo "1024" > /data/node/.dbcache_mb
+          echo "auto" > /data/node/.dbcache_mb
           chown 1000:1000 /data/node/.dbcache_mb || true
+        else
+          raw="$$(cat /data/node/.dbcache_mb 2>/dev/null | tr -d ' \t\r\n' || true)"
+          if echo "$$raw" | grep -Eq '^[0-9]+$$'; then
+            if [ "$$raw" -lt 2048 ]; then
+              echo "[axedgb] Bumping dbcache preset to 2048MB minimum"
+              echo "2048" > /data/node/.dbcache_mb
+              chown 1000:1000 /data/node/.dbcache_mb || true
+            fi
+          fi
         fi
 
         # Cleanup from older broken installs (a directory with the script name).
@@ -635,7 +644,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/config/coins.json:/app/coins.json:ro
 
   app:
-    image: ghcr.io/willitmod/axedgb-app:0.9.3
+    image: ghcr.io/willitmod/axedgb-app:0.9.4
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

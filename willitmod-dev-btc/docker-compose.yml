@@ -192,7 +192,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/www:/www
 
   app:
-    image: ghcr.io/willitmod/axebtc-app-umbrel-dev:0.7.13-alpha
+    image: ghcr.io/willitmod/axebtc-app-umbrel-dev:0.7.14
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s
@@ -223,6 +223,8 @@ services:
       FRACTAL_IMAGE: "fractalbitcoin/fractal:v0.2.9rc2"
       CKPOOL_IMAGE: "ghcr.io/willitmod/docker-ckpool-solo:590fb2a"
       STATIC_DIR: "/app/static"
+      FB_RPC_TIMEOUT_S: "30"
+      FB_NODE_CACHE_TTL_S: "30"
 
 networks:
   umbrel_main_network:

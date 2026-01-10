@@ -456,7 +456,7 @@ services:
             --arg desired "$$desired_addr" \
             --arg addr "$$applied_addr" \
             --arg locked "$$stratum_locked" \
-            '{t:$$ts,miningcoreRepaired:($$repaired=="1"),settingsApplied:($$applied=="1"),desiredPayout:$$desired,appliedPayout:$$addr,stratumLocked:($$locked=="1")}' \
+            '{t:$ts,miningcoreRepaired:($repaired=="1"),settingsApplied:($applied=="1"),desiredPayout:$desired,appliedPayout:$addr,stratumLocked:($locked=="1")}' \
             > "$$boot_repair" 2>/dev/null || true
           chown 1000:1000 "$$boot_repair" 2>/dev/null || true
         fi
@@ -644,7 +644,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/config/coins.json:/app/coins.json:ro
 
   app:
-    image: ghcr.io/willitmod/axedgb-app:0.9.6-test
+    image: ghcr.io/willitmod/axedgb-app:0.9.4
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

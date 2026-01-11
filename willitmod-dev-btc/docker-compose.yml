@@ -165,11 +165,11 @@ services:
       - ${APP_DATA_DIR}/data/templates/fractald-entrypoint.sh:/fractald-entrypoint.sh:ro
     entrypoint: ["/bin/sh", "/fractald-entrypoint.sh"]
     healthcheck:
-      test: ["CMD-SHELL", "bitcoin-cli -datadir=/data -rpcwait=30 -rpcclienttimeout=120 getblockchaininfo >/dev/null 2>&1"]
+      test: ["CMD-SHELL", "bitcoin-cli -datadir=/data -rpcwait=1 -rpcclienttimeout=2 getblockchaininfo >/dev/null 2>&1"]
       interval: 30s
-      timeout: 10s
-      retries: 20
-      start_period: 2m
+      timeout: 5s
+      retries: 60
+      start_period: 10m
 
   ckpool:
     image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
@@ -202,7 +202,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/www:/www
 
   app:
-    image: ghcr.io/willitmod/axebtc-app-umbrel-dev:0.7.22
+    image: ghcr.io/willitmod/axebtc-app-umbrel-dev:0.7.23
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

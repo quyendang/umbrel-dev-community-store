@@ -71,7 +71,7 @@ try_add_peers() {
   case "${last}" in
     ''|*[!0-9]*) last=0 ;;
   esac
-  if [ "${now}" -gt 0 ] && [ $((now - last)) -lt 300 ]; then
+  if [ "${now}" -gt 0 ] && [ $((now - last)) -lt 60 ]; then
     return
   fi
 
@@ -102,7 +102,7 @@ try_add_peers() {
         /"port"[[:space:]]*:/ {
           gsub(/[",]/,"");
           port=$2;
-          if (addr != "" && port != "" && added < 12) {
+          if (addr != "" && port != "" && added < 8) {
             print addr ":" port;
             added++;
           }
@@ -113,6 +113,7 @@ try_add_peers() {
     | while read -r ap; do
         bitcoin-cli -datadir="${DATADIR}" -rpcwait=5 -rpcclienttimeout=10 addnode "${ap}" onetry >/dev/null 2>&1 || true
       done
+  echo "[fractald] Peer boost complete."
 }
 
 stop_node() {

@@ -18,7 +18,7 @@ calc_dbcache() {
   # Umbrel hardware. Keep it bounded to avoid OOM on low-memory systems.
   dbcache="$((mem_mb / 4))"
   if [ "${dbcache}" -lt 512 ]; then dbcache=512; fi
-  if [ "${dbcache}" -gt 8192 ]; then dbcache=8192; fi
+  if [ "${dbcache}" -gt 4096 ]; then dbcache=4096; fi
   echo "${dbcache}"
 }
 

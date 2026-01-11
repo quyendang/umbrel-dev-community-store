@@ -59,6 +59,9 @@ services:
         if [ -f /data/templates/fractald-entrypoint.sh ]; then
           sed -i 's/^  echo 16$/  echo 32/' /data/templates/fractald-entrypoint.sh || true
           sed -i 's/^  echo 256$/  echo 1024/' /data/templates/fractald-entrypoint.sh || true
+          # Cap dbcache at 4GB by default (users can still override via FB_DBCACHE_MB env var).
+          sed -i 's/-gt 8192/-gt 4096/' /data/templates/fractald-entrypoint.sh || true
+          sed -i 's/dbcache=8192/dbcache=4096/' /data/templates/fractald-entrypoint.sh || true
           chmod +x /data/templates/fractald-entrypoint.sh || true
           chown 1000:1000 /data/templates/fractald-entrypoint.sh || true
         fi

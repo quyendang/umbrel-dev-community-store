@@ -174,7 +174,9 @@ services:
       - ${APP_DATA_DIR}/data/templates/fractald-entrypoint.sh:/fractald-entrypoint.sh:ro
     entrypoint: ["/bin/sh", "/fractald-entrypoint.sh"]
     healthcheck:
-      test: ["CMD-SHELL", "bitcoin-cli -datadir=/data -rpcwait=1 -rpcclienttimeout=2 getblockchaininfo >/dev/null 2>&1"]
+      # Avoid hammering Fractal RPC during IBD (it can starve the UI and return 503).
+      # If sync is disabled, treat the container as healthy.
+      test: ["CMD-SHELL", "FLAG=/data/sync_enabled; if [ -f \"$FLAG\" ] && [ \"$(cat \"$FLAG\" 2>/dev/null || true)\" != \"1\" ]; then exit 0; fi; pid=\"$(cat /tmp/bitcoind.pid 2>/dev/null || true)\"; [ -n \"$pid\" ] && kill -0 \"$pid\" 2>/dev/null"]
       interval: 30s
       timeout: 5s
       retries: 60

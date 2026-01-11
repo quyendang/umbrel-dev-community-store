@@ -6,6 +6,22 @@ prune=30000
 
 # Allow more peers (helps initial sync + network robustness).
 maxconnections=256
+# Encourage outbound connections in IBD.
+maxoutconnections=64
+
+# Stable outbound peers (bootstrap). This helps prevent stalls when DNS seeds
+# are slow/unreliable or when addrman is sparse after restart.
+# These are non-exclusive; Fractal will still use normal peer discovery.
+addnode=136.243.130.28:10333
+addnode=136.243.130.27:10333
+addnode=142.132.135.164:10333
+addnode=142.132.135.175:10333
+addnode=5.9.118.219:8333
+addnode=3.68.108.64:8333
+addnode=18.198.95.247:8333
+addnode=18.144.169.92:8333
+addnode=52.76.241.19:8333
+addnode=173.212.223.9:8333
 
 # Mainnet only (Fractal Bitcoin).
 

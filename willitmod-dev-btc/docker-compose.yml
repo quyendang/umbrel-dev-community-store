@@ -119,6 +119,16 @@ services:
           fi
           chown -R 1000:1000 /data/fractal
         fi
+        # Keep existing installs up to date with the latest template (bootstrap peers, etc).
+        if [ -f /data/templates/fractal.conf.template ]; then
+          tmp="/tmp/fractal.conf.$$"
+          envsubst < /data/templates/fractal.conf.template > "${tmp}"
+          if [ -f /data/fractal/bitcoin.conf ]; then
+            mv /data/fractal/bitcoin.conf "/data/fractal/bitcoin.conf.bak.$(date +%s 2>/dev/null || echo 0)" || true
+          fi
+          mv "${tmp}" /data/fractal/bitcoin.conf
+          chown -R 1000:1000 /data/fractal
+        fi
         if [ ! -f /data/fractal/sync_enabled ]; then
           echo "0" > /data/fractal/sync_enabled
           chown 1000:1000 /data/fractal/sync_enabled || true
@@ -192,7 +202,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/www:/www
 
   app:
-    image: ghcr.io/willitmod/axebtc-app-umbrel-dev:0.7.20
+    image: ghcr.io/willitmod/axebtc-app-umbrel-dev:0.7.21
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

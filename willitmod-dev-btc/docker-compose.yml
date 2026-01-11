@@ -176,7 +176,7 @@ services:
     healthcheck:
       # Avoid hammering Fractal RPC during IBD (it can starve the UI and return 503).
       # If sync is disabled, treat the container as healthy.
-      test: ["CMD-SHELL", "FLAG=/data/sync_enabled; if [ -f \"$FLAG\" ] && [ \"$(cat \"$FLAG\" 2>/dev/null || true)\" != \"1\" ]; then exit 0; fi; pid=\"$(cat /tmp/bitcoind.pid 2>/dev/null || true)\"; [ -n \"$pid\" ] && kill -0 \"$pid\" 2>/dev/null"]
+      test: ["CMD-SHELL", "[ ! -f /data/sync_enabled ] || [ \"$(cat /data/sync_enabled 2>/dev/null || true)\" != \"1\" ] || ( [ -f /tmp/bitcoind.pid ] && kill -0 \"$(cat /tmp/bitcoind.pid 2>/dev/null || true)\" 2>/dev/null )"]
       interval: 30s
       timeout: 5s
       retries: 60

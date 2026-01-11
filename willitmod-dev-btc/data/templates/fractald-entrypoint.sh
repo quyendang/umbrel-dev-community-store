@@ -28,7 +28,7 @@ calc_rpcthreads() {
     echo "${v}"
     return
   fi
-  echo 16
+  echo 32
 }
 
 calc_rpcworkqueue() {
@@ -37,7 +37,7 @@ calc_rpcworkqueue() {
     echo "${v}"
     return
   fi
-  echo 256
+  echo 1024
 }
 
 read_flag() {
@@ -131,7 +131,10 @@ stop_node() {
   fi
 
   echo "[fractald] Stopping Fractal node..."
-  bitcoin-cli -datadir="${DATADIR}" stop >/dev/null 2>&1 || true
+  if ! bitcoin-cli -datadir="${DATADIR}" stop >/dev/null 2>&1; then
+    # If RPC is overloaded/unresponsive, fall back to a direct signal.
+    kill -TERM "${pid}" 2>/dev/null || true
+  fi
 
   # Wait up to ~10 minutes for a clean shutdown (flush + prune can be slow in IBD).
   for _ in 1 2 3 4 5 6 7 8 9 10 \

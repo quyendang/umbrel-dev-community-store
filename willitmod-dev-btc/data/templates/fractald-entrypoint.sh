@@ -19,6 +19,24 @@ calc_dbcache() {
   echo "${dbcache}"
 }
 
+calc_rpcthreads() {
+  v="${FB_RPCTHREADS:-}"
+  if [ -n "${v}" ]; then
+    echo "${v}"
+    return
+  fi
+  echo 16
+}
+
+calc_rpcworkqueue() {
+  v="${FB_RPCWORKQUEUE:-}"
+  if [ -n "${v}" ]; then
+    echo "${v}"
+    return
+  fi
+  echo 256
+}
+
 read_flag() {
   if [ -f "${FLAG}" ]; then
     # Accept "1", "true", etc. Anything else is treated as off.
@@ -35,8 +53,11 @@ read_flag() {
 start_node() {
   echo "[fractald] Starting Fractal node..."
   dbcache="$(calc_dbcache)"
+  rpcthreads="$(calc_rpcthreads)"
+  rpcworkqueue="$(calc_rpcworkqueue)"
   echo "[fractald] Using dbcache=${dbcache}MB"
-  bitcoind -datadir="${DATADIR}" -printtoconsole -dbcache="${dbcache}" &
+  echo "[fractald] Using rpcthreads=${rpcthreads} rpcworkqueue=${rpcworkqueue}"
+  bitcoind -datadir="${DATADIR}" -printtoconsole -dbcache="${dbcache}" -rpcthreads="${rpcthreads}" -rpcworkqueue="${rpcworkqueue}" &
   echo $! > /tmp/bitcoind.pid
 }
 
@@ -50,7 +71,7 @@ try_add_peers() {
   case "${last}" in
     ''|*[!0-9]*) last=0 ;;
   esac
-  if [ "${now}" -gt 0 ] && [ $((now - last)) -lt 60 ]; then
+  if [ "${now}" -gt 0 ] && [ $((now - last)) -lt 300 ]; then
     return
   fi
 

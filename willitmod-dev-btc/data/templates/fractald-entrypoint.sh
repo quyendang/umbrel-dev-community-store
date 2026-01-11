@@ -4,6 +4,21 @@ set -eu
 DATADIR="${DATADIR:-/data}"
 FLAG="${DATADIR}/sync_enabled"
 
+calc_dbcache() {
+  dbcache="${FB_DBCACHE_MB:-}"
+  if [ -n "${dbcache}" ]; then
+    echo "${dbcache}"
+    return
+  fi
+
+  mem_kb="$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)"
+  mem_mb="$((mem_kb / 1024))"
+  dbcache="$((mem_mb / 8))"
+  if [ "${dbcache}" -lt 256 ]; then dbcache=256; fi
+  if [ "${dbcache}" -gt 2048 ]; then dbcache=2048; fi
+  echo "${dbcache}"
+}
+
 read_flag() {
   if [ -f "${FLAG}" ]; then
     # Accept "1", "true", etc. Anything else is treated as off.
@@ -19,8 +34,64 @@ read_flag() {
 
 start_node() {
   echo "[fractald] Starting Fractal node..."
-  bitcoind -datadir="${DATADIR}" -printtoconsole &
+  dbcache="$(calc_dbcache)"
+  echo "[fractald] Using dbcache=${dbcache}MB"
+  bitcoind -datadir="${DATADIR}" -printtoconsole -dbcache="${dbcache}" &
   echo $! > /tmp/bitcoind.pid
+}
+
+try_add_peers() {
+  # Throttle (avoid hammering RPC / addnode).
+  now="$(date +%s 2>/dev/null || echo 0)"
+  last="$(cat /tmp/peer_boost_at 2>/dev/null || echo 0)"
+  case "${now}" in
+    ''|*[!0-9]*) now=0 ;;
+  esac
+  case "${last}" in
+    ''|*[!0-9]*) last=0 ;;
+  esac
+  if [ "${now}" -gt 0 ] && [ $((now - last)) -lt 60 ]; then
+    return
+  fi
+
+  # If Fractal has trouble finding peers via DNS seed, "onetry" a few fresh
+  # addresses from addrman to help establish initial connectivity.
+  # Keep it lightweight and safe (no persistent addnode entries).
+  cc="$(bitcoin-cli -datadir="${DATADIR}" -rpcwait=30 -rpcclienttimeout=60 getconnectioncount 2>/dev/null || echo 0)"
+  case "${cc}" in
+    ''|*[!0-9]*) cc=0 ;;
+  esac
+  if [ "${cc}" -ge 4 ]; then
+    return
+  fi
+
+  if [ "${now}" -gt 0 ]; then
+    echo "${now}" > /tmp/peer_boost_at 2>/dev/null || true
+  fi
+
+  echo "[fractald] Low peer count (${cc}); trying a few onetry peers..."
+  bitcoin-cli -datadir="${DATADIR}" -rpcwait=30 -rpcclienttimeout=60 getnodeaddresses 60 2>/dev/null \
+    | awk '
+        BEGIN { addr=""; port=""; added=0; }
+        /"address"[[:space:]]*:/ {
+          gsub(/[",]/,"");
+          addr=$2;
+          next;
+        }
+        /"port"[[:space:]]*:/ {
+          gsub(/[",]/,"");
+          port=$2;
+          if (addr != "" && port != "" && added < 12) {
+            print addr ":" port;
+            added++;
+          }
+          addr=""; port="";
+          next;
+        }
+      ' \
+    | while read -r ap; do
+        bitcoin-cli -datadir="${DATADIR}" -rpcwait=5 -rpcclienttimeout=10 addnode "${ap}" onetry >/dev/null 2>&1 || true
+      done
 }
 
 stop_node() {
@@ -58,6 +129,7 @@ while true; do
         stop_node
         break
       fi
+      try_add_peers || true
       sleep 5
     done
   else

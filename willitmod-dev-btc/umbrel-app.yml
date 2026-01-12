@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-btc
 category: bitcoin
 name: AxeBTCF
-version: "0.7.30"
+version: "0.7.32"
 tagline: BTC node + solo pool + AxePoW
 description: >-
   Run a Bitcoin (BTC) full node (Bitcoin Core) and a solo Stratum v1 pool (ckpool) as a single Umbrel app installation.
@@ -12,7 +12,7 @@ description: >-
 
 
   Miner connection:
-    - URL: `stratum+tcp://<your-umbrel-ip>:7890`
+    - URL: `stratum+tcp://<your-umbrel-ip>:7890` (use an IP address, not `umbrel.local`)
     - Username: worker name (optional)
     - Password: anything
 

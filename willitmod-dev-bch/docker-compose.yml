@@ -70,6 +70,71 @@ services:
             echo '' >> /data/node/bitcoin.conf
             echo 'maxconnections=256' >> /data/node/bitcoin.conf
           fi
+
+          # Ensure RPC is reachable from other containers (app + ckpool).
+          # Older installs may have rpcbind=127.0.0.1 or missing rpcallowip for the apps subnet,
+          # which can present as "connection refused" from the UI or pool services.
+          conf="/data/node/bitcoin.conf"
+          if ! awk -v apps="$$APPS_SUBNET" 'BEGIN{seenBind=0; seenApps=0}
+            /^[[]/{exit}
+            $$0=="rpcbind=0.0.0.0"{seenBind=1}
+            apps!="" && $$0==("rpcallowip=" apps){seenApps=1}
+            END{exit(seenBind && seenApps ? 0 : 1)}
+          ' "$$conf"; then
+            echo "[axebch] Ensuring RPC bind/access settings in bitcoin.conf"
+            awk -v apps="$$APPS_SUBNET" '
+              BEGIN{seenBind=0; seenLocal=0; seenApps=0; seen10=0; seen172=0; seen192=0; injected=0}
+              function mark_allow(line){
+                if(line=="rpcallowip=127.0.0.1/32") seenLocal=1
+                else if(apps!="" && line==("rpcallowip=" apps)) seenApps=1
+                else if(line=="rpcallowip=10.0.0.0/8") seen10=1
+                else if(line=="rpcallowip=172.16.0.0/12") seen172=1
+                else if(line=="rpcallowip=192.168.0.0/16") seen192=1
+              }
+              function emit_missing(){
+                if(seenBind==0){ print "rpcbind=0.0.0.0"; seenBind=1 }
+                if(seenLocal==0){ print "rpcallowip=127.0.0.1/32"; seenLocal=1 }
+                if(seenApps==0 && apps!=""){ print "rpcallowip=" apps; seenApps=1 }
+                if(seen10==0){ print "rpcallowip=10.0.0.0/8"; seen10=1 }
+                if(seen172==0){ print "rpcallowip=172.16.0.0/12"; seen172=1 }
+                if(seen192==0){ print "rpcallowip=192.168.0.0/16"; seen192=1 }
+              }
+              function maybe_inject(){
+                if(injected==1) return
+                if(seenBind==0 || seenLocal==0 || seenApps==0 || seen10==0 || seen172==0 || seen192==0){
+                  print ""
+                  print "# axebch-rpc-access-v1"
+                  print "# Ensure RPC is reachable from other containers (app + pool)"
+                  emit_missing()
+                  print ""
+                }
+                injected=1
+              }
+              /^[[]/{
+                maybe_inject()
+                print
+                next
+              }
+              /^rpcbind=/{
+                if(seenBind==0){ print "rpcbind=0.0.0.0"; seenBind=1 }
+                next
+              }
+              /^rpcallowip=/{
+                mark_allow($$0)
+                print
+                next
+              }
+              {
+                print
+                if(seenBind==0 && $$0 ~ /^rpcpassword=/){
+                  print "rpcbind=0.0.0.0"; seenBind=1
+                }
+                next
+              }
+              END{ maybe_inject() }
+            ' "$$conf" > "$$conf.tmp" && mv "$$conf.tmp" "$$conf"
+          fi
+
           chown 1000:1000 /data/node/bitcoin.conf || true
         fi
 
@@ -134,7 +199,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/www:/www
 
   app:
-    image: ghcr.io/willitmod/axebch-app-umbrel-dev:0.7.99
+    image: ghcr.io/willitmod/axebch-app-umbrel-dev:0.7.100
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

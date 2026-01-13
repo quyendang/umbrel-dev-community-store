@@ -104,6 +104,43 @@ services:
         path.write_text(text[:idx] + insert + text[idx:], encoding="utf-8")
         PY
           fi
+          # Upgrade: ensure Umbrel restarts don't hang for many minutes when Fractal is enabled.
+          if ! grep -q 'AXEBTCF_FAST_STOP' /data/templates/fractald-entrypoint.sh 2>/dev/null; then
+        python3 - <<'PY' || true
+        from pathlib import Path
+        
+        path = Path("/data/templates/fractald-entrypoint.sh")
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            raise SystemExit(0)
+        
+        if "AXEBTCF_FAST_STOP" in text:
+            raise SystemExit(0)
+        
+        text = text.replace(
+            'bitcoin-cli -datadir="${DATADIR}" stop',
+            'bitcoin-cli -datadir="${DATADIR}" -rpcclienttimeout=10 stop',
+        )
+        
+        comment = "  # Wait up to ~10 minutes for a clean shutdown"
+        cidx = text.find(comment)
+        if cidx >= 0:
+            fidx = text.find("  for _ in", cidx)
+            didx = text.find("; do", fidx)
+            eol = text.find("\n", didx)
+            if fidx >= 0 and didx >= 0 and eol >= 0:
+                nums = " ".join(str(i) for i in range(1, 46))
+                replacement = (
+                    "  # AXEBTCF_FAST_STOP\n"
+                    "  # Wait up to ~90s for a clean shutdown (Umbrel restarts should be quick).\n"
+                    f"  for _ in {nums}; do\n"
+                )
+                text = text[:cidx] + replacement + text[eol + 1 :]
+        
+        path.write_text(text, encoding="utf-8")
+        PY
+          fi
           chmod +x /data/templates/fractald-entrypoint.sh || true
           chown 1000:1000 /data/templates/fractald-entrypoint.sh || true
         fi

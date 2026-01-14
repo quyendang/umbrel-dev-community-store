@@ -1,0 +1,38 @@
+diff --git a/src/Miningcore/Persistence/Postgres/Repositories/BlockRepository.cs b/src/Miningcore/Persistence/Postgres/Repositories/BlockRepository.cs
+index 01e41be6..a98bd5e0 100644
+--- a/src/Miningcore/Persistence/Postgres/Repositories/BlockRepository.cs
++++ b/src/Miningcore/Persistence/Postgres/Repositories/BlockRepository.cs
+@@ -47,20 +47,18 @@ public class BlockRepository : IBlockRepository
+     public async Task<Block[]> PageBlocksAsync(IDbConnection con, string poolId, BlockStatus[] status,
+         int page, int pageSize, CancellationToken ct)
+     {
+-        const string query = @"SELECT * FROM blocks WHERE poolid = @poolid AND status = ANY(@status)
++        const string query = @"SELECT * FROM blocks WHERE poolid = @poolid
+             ORDER BY created DESC OFFSET @offset FETCH NEXT @pageSize ROWS ONLY";
+ 
+         return (await con.QueryAsync<Entities.Block>(new CommandDefinition(query, new
+         {
+             poolId,
+-            status = status.Select(x => x.ToString().ToLower()).ToArray(),
+             offset = page * pageSize,
+             pageSize
+         }, cancellationToken: ct)))
+             .Select(mapper.Map<Block>)
+             .ToArray();
+     }
+ 
+     public async Task<Block[]> PageBlocksAsync(IDbConnection con, BlockStatus[] status, int page, int pageSize, CancellationToken ct)
+     {
+-        const string query = @"SELECT * FROM blocks WHERE status = ANY(@status)
++        const string query = @"SELECT * FROM blocks
+             ORDER BY created DESC OFFSET @offset FETCH NEXT @pageSize ROWS ONLY";
+ 
+         return (await con.QueryAsync<Entities.Block>(new CommandDefinition(query, new
+         {
+-            status = status.Select(x => x.ToString().ToLower()).ToArray(),
+             offset = page * pageSize,
+             pageSize
+         }, cancellationToken: ct)))
+             .Select(mapper.Map<Block>)
+             .ToArray();
+     }

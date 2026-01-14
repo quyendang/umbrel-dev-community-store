@@ -38,6 +38,7 @@ jobs:
           set -eux
           cd _vendor/miningcore
           git apply ../../willitmod-dev-dgb/images/miningcore/patches/axedgb-best-share.patch
+          git apply ../../willitmod-dev-dgb/images/miningcore/patches/axedgb-postgres-blocks-int-status.patch
 
       - uses: docker/setup-qemu-action@v3
 

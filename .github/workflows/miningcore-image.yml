@@ -38,8 +38,46 @@ jobs:
           set -eux
           cd _vendor/miningcore
           git apply ../../willitmod-dev-dgb/images/miningcore/patches/axedgb-best-share.patch
-          # Be tolerant of whitespace/line-ending differences between platforms.
-          git apply --ignore-space-change ../../willitmod-dev-dgb/images/miningcore/patches/axedgb-postgres-blocks-int-status.patch
+          # AxeDGB uses an older Postgres schema where blocks.status is INT (not TEXT).
+          # Upstream Miningcore uses TEXT comparisons in the /blocks API which 500s with:
+          #   operator does not exist: integer = text
+          # Patch the query builder to not filter by status (the app reads block history from Postgres directly).
+          python3 - <<'PY'
+          from pathlib import Path
+          
+          path = Path("src/Miningcore/Persistence/Postgres/Repositories/BlockRepository.cs")
+          text = path.read_text(encoding="utf-8", errors="replace")
+          
+          # 1) Pool-scoped paging query
+          text = text.replace(
+              'const string query = @"SELECT * FROM blocks WHERE poolid = @poolid AND status = ANY(@status)\\n'
+              '            ORDER BY created DESC OFFSET @offset FETCH NEXT @pageSize ROWS ONLY";',
+              'const string query = @"SELECT * FROM blocks WHERE poolid = @poolid\\n'
+              '            ORDER BY created DESC OFFSET @offset FETCH NEXT @pageSize ROWS ONLY";',
+              1,
+          )
+          text = text.replace(
+              "            status = status.Select(x => x.ToString().ToLower()).ToArray(),\\n",
+              "",
+              1,
+          )
+          
+          # 2) Cluster-wide paging query
+          text = text.replace(
+              'const string query = @"SELECT * FROM blocks WHERE status = ANY(@status)\\n'
+              '            ORDER BY created DESC OFFSET @offset FETCH NEXT @pageSize ROWS ONLY";',
+              'const string query = @"SELECT * FROM blocks\\n'
+              '            ORDER BY created DESC OFFSET @offset FETCH NEXT @pageSize ROWS ONLY";',
+              1,
+          )
+          text = text.replace(
+              "            status = status.Select(x => x.ToString().ToLower()).ToArray(),\\n",
+              "",
+              1,
+          )
+          
+          path.write_text(text, encoding="utf-8")
+          PY
 
       - uses: docker/setup-qemu-action@v3
 

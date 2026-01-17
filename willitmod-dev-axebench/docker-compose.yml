@@ -7,7 +7,7 @@ services:
       APP_PORT: 5050
 
   server:
-    image: ghcr.io/willitmod/axebench-release:v3.0.2-r1@sha256:bbd179793fed078717223f8a9906445fe08cceaa98c34248fc61ef5983cf6c61
+    image: ghcr.io/willitmod/axebench-release:v3.0.2-r2@sha256:64ab2c3194f7fb1c380d4c31f742da7ccad240d0fe263828cef2b372101f96ac
     restart: on-failure
     stop_grace_period: 30s
     init: true

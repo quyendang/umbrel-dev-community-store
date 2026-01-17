@@ -4,7 +4,7 @@ services:
   app_proxy:
     environment:
       APP_HOST: willitmod-dev-axebench_server_1
-      APP_PORT: 5050
+      APP_PORT: 5000
 
   server:
     image: ghcr.io/willitmod/axebench-release:v3.0.2-r2@sha256:64ab2c3194f7fb1c380d4c31f742da7ccad240d0fe263828cef2b372101f96ac
@@ -13,7 +13,7 @@ services:
     init: true
     environment:
       AXE_HOST: 0.0.0.0
-      AXE_PORT: 5050
+      AXE_PORT: 5000
       HOME: /data
     volumes:
       - ${APP_DATA_DIR}/data:/data

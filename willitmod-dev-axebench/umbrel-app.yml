@@ -11,12 +11,12 @@ description: >-
 
 
   Dev-only note:
-    - This variant uses port 5050 to avoid conflicts on systems where 5000 is already in use (e.g. Synology DSM).
+    - This variant uses the standard port 5000.
 developer: WillItMod
 website: https://github.com/WillItMod/AxeBench-Release
 support: https://github.com/WillItMod/AxeBench-Release/issues
 dependencies: []
-port: 5050
+port: 5000
 gallery:
   - https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axebench/1.png
   - https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axebench/2.png
@@ -29,5 +29,5 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  Dev-only build: switches host port from 5000 to 5050 to avoid conflicts on Synology and similar systems. Updated release image tag to v3.0.2-r2.
+  Updated release image tag to v3.0.2-r2.
 submitter: WillItMod

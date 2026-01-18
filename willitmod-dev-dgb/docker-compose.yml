@@ -75,9 +75,9 @@ services:
         else
           raw="$$(cat /data/node/.dbcache_mb 2>/dev/null | tr -d ' \t\r\n' || true)"
           if echo "$$raw" | grep -Eq '^[0-9]+$$'; then
-            if [ "$$raw" -lt 2048 ]; then
-              echo "[axedgb] Bumping dbcache preset to 2048MB minimum"
-              echo "2048" > /data/node/.dbcache_mb
+            if [ "$$raw" -lt 4096 ]; then
+              echo "[axedgb] Bumping dbcache preset to 4096MB minimum"
+              echo "4096" > /data/node/.dbcache_mb
               chown 1000:1000 /data/node/.dbcache_mb || true
             fi
           fi
@@ -757,7 +757,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/config/coins.json:/app/coins.json:ro
 
   app:
-    image: ghcr.io/willitmod/axedgb-app:0.9.129
+    image: ghcr.io/willitmod/axedgb-app:0.9.130
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

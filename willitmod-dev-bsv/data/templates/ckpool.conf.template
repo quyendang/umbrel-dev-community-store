@@ -1,0 +1,15 @@
+{
+  "logdir" : "/data",
+  "btcd" : "bsvd",
+  "btcuser" : "${RPC_USER}",
+  "btcpass" : "${RPC_PASSWORD}",
+  "btcport" : ${BSV_RPC_PORT},
+  "btcsig" : "/AxeBSV/",
+  "btcaddress" : "CHANGEME_BSV_PAYOUT_ADDRESS",
+  "webdir" : "/data/pool",
+  "userdir" : "/data/users",
+  "serverurl" : "stratum+tcp://0.0.0.0:3333",
+  "mindiff" : 1,
+  "startdiff" : 1,
+  "maxdiff" : 0
+}

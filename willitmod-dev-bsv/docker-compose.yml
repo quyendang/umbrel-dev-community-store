@@ -78,9 +78,26 @@ services:
           envsubst < /tmp/bitcoin.conf.template > /data/node/bitcoin.conf
           rm -f /tmp/bitcoin.conf.template || true
           chown -R 1000:1000 /data/node
+        else
+          # Ensure mandatory BSV policy settings exist (older installs may be missing these).
+          grep -q '^excessiveblocksize=' /data/node/bitcoin.conf 2>/dev/null || echo 'excessiveblocksize=1000000000' >> /data/node/bitcoin.conf
+          grep -q '^maxstackmemoryusageconsensus=' /data/node/bitcoin.conf 2>/dev/null || echo 'maxstackmemoryusageconsensus=100000000' >> /data/node/bitcoin.conf
+          grep -q '^minminingtxfee=' /data/node/bitcoin.conf 2>/dev/null || echo 'minminingtxfee=0.000005' >> /data/node/bitcoin.conf
+          grep -q '^zmqpubhashblock=' /data/node/bitcoin.conf 2>/dev/null || echo 'zmqpubhashblock=tcp://0.0.0.0:28332' >> /data/node/bitcoin.conf
+          chown 1000:1000 /data/node/bitcoin.conf || true
         fi
 
+        # Generate or repair ckpool.conf (older formats can break ckpool RPC connectivity).
+        ckpool_needs_repair="0"
         if [ ! -f /data/pool/config/ckpool.conf ]; then
+          ckpool_needs_repair="1"
+        else
+          if ! jq -e '.btcd | type == "array"' /data/pool/config/ckpool.conf >/dev/null 2>&1; then
+            ckpool_needs_repair="1"
+          fi
+        fi
+
+        if [ "$$ckpool_needs_repair" = "1" ]; then
           cat > /tmp/ckpool.conf.template <<'EOF'
         {
           "btcd": [

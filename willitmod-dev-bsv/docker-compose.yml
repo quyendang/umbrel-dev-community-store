@@ -87,10 +87,18 @@ services:
 
         # Generate or repair ckpool.conf (older formats can break ckpool RPC connectivity).
         ckpool_needs_repair="0"
+        existing_btcaddress=""
         if [ ! -f /data/pool/config/ckpool.conf ]; then
           ckpool_needs_repair="1"
         else
+          existing_btcaddress="$(jq -r '.btcaddress // empty' /data/pool/config/ckpool.conf 2>/dev/null || true)"
           if ! jq -e '.btcd | type == "array"' /data/pool/config/ckpool.conf >/dev/null 2>&1; then
+            ckpool_needs_repair="1"
+          elif ! jq -e '.btcd[0].url | type == "string" and test("^[^:]+:[0-9]+$")' /data/pool/config/ckpool.conf >/dev/null 2>&1; then
+            ckpool_needs_repair="1"
+          elif ! jq -e '.btcd[0].auth | type == "string" and length > 0' /data/pool/config/ckpool.conf >/dev/null 2>&1; then
+            ckpool_needs_repair="1"
+          elif ! jq -e '.btcd[0].pass | type == "string" and length > 0' /data/pool/config/ckpool.conf >/dev/null 2>&1; then
             ckpool_needs_repair="1"
           fi
         fi
@@ -117,6 +125,14 @@ services:
           "zmqblock": "tcp://bsvd:28332"
         }
         EOF
+          if [ -n "$$existing_btcaddress" ] && [ "$$existing_btcaddress" != "CHANGEME_BSV_PAYOUT_ADDRESS" ]; then
+            tmp="$$(mktemp)"
+            if BTCADDRESS="$$existing_btcaddress" jq '.btcaddress = env.BTCADDRESS' /data/pool/config/ckpool.conf > "$$tmp" 2>/dev/null; then
+              mv "$$tmp" /data/pool/config/ckpool.conf
+            else
+              rm -f "$$tmp" || true
+            fi
+          fi
           chown -R 1000:1000 /data/pool
         fi
 

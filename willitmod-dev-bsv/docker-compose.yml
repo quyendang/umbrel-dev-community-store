@@ -131,7 +131,7 @@ services:
     environment:
       NETWORK_IP: "${NETWORK_IP}"
       STATIC_DIR: "/app/static"
-      APP_CHANNEL: "DEV"
+      APP_CHANNEL: "ALPHA"
       APP_VERSION_SUFFIX: "-dev"
       BSV_RPC_HOST: "bsvd"
       BSV_RPC_PORT: "8332"

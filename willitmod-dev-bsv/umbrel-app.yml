@@ -23,10 +23,10 @@ website: https://github.com/WillItMod/AxeBSV_Release
 repo: https://github.com/WillItMod/AxeBSV_Release
 support: https://github.com/WillItMod/AxeBSV_Release/issues
 dependencies: []
-port: 21215
-icon: https://raw.githubusercontent.com/WillItMod/AxeBSV_Release/main/willitmod-dev-bsv/icon.png
+port: 21216
+icon: https://raw.githubusercontent.com/WillItMod/umbrel-dev-community-store/main/willitmod-dev-bsv/icon.png
 gallery:
-  - https://raw.githubusercontent.com/WillItMod/AxeBSV_Release/main/willitmod-dev-bsv/icon.png
+  - https://raw.githubusercontent.com/WillItMod/umbrel-dev-community-store/main/willitmod-dev-bsv/icon.png
 path: ""
 defaultUsername: ""
 defaultPassword: ""

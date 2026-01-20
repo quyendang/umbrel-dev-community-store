@@ -1,0 +1,133 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: axebsv-app
+      APP_PORT: 3000
+      JWT_SECRET: "${JWT_SECRET}"
+    networks:
+      - umbrel_main_network
+
+  init:
+    image: alpine:3.22.1
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+      - ${APP_DATA_DIR}:/appdata
+      - ./data/templates:/data/templates:ro
+    environment:
+      APPS_SUBNET: "${NETWORK_IP}/16"
+      RPC_USER: "bsv"
+      RPC_PASSWORD: "${APP_PASSWORD}"
+      BSV_RPC_PORT: "8332"
+      BSV_P2P_PORT: "8333"
+    command:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+
+        apk add --no-cache envsubst curl >/dev/null
+
+        if [ -n "${JWT_SECRET:-}" ]; then
+          envfile="/appdata/.env"
+          tmp="/appdata/.env.tmp"
+          if [ -f "$$envfile" ]; then
+            grep -v '^JWT_SECRET=' "$$envfile" > "$$tmp" || true
+          else
+            : > "$$tmp"
+          fi
+          printf "JWT_SECRET=%s\n" "${JWT_SECRET}" >> "$$tmp"
+          chmod 600 "$$tmp" || true
+          chown 1000:1000 "$$tmp" || true
+          mv "$$tmp" "$$envfile"
+        fi
+
+        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
+
+        if [ ! -f /data/node/bitcoin.conf ]; then
+          envsubst < /data/templates/bitcoin.conf.template > /data/node/bitcoin.conf
+          chown -R 1000:1000 /data/node
+        fi
+
+        if [ ! -f /data/pool/config/ckpool.conf ]; then
+          envsubst < /data/templates/ckpool.conf.template > /data/pool/config/ckpool.conf
+          chown -R 1000:1000 /data/pool
+        fi
+
+  bsvd:
+    image: bitcoinsv/bitcoin-sv:1.2.0
+    restart: unless-stopped
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    ports:
+      - "8333:8333/tcp"
+    volumes:
+      - ${APP_DATA_DIR}/data/node:/data
+    command:
+      - bitcoind
+      - -datadir=/data
+      - -conf=/data/bitcoin.conf
+
+  ckpool:
+    image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
+    restart: unless-stopped
+    depends_on:
+      - bsvd
+      - init
+    stop_grace_period: 30s
+    ports:
+      - "8901:3333/tcp"
+    volumes:
+      - ${APP_DATA_DIR}/data/pool/config/ckpool.conf:/config/ckpool.conf:ro
+      - ${APP_DATA_DIR}/data/pool/www:/data:rw
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+        rm -f /tmp/ckpool/*.pid 2>/dev/null || true
+        if command -v ckpool >/dev/null 2>&1; then
+          exec ckpool -k -L -c /config/ckpool.conf
+        elif [ -x /bin/ckpool ]; then
+          exec /bin/ckpool -k -L -c /config/ckpool.conf
+        elif [ -x /usr/bin/ckpool ]; then
+          exec /usr/bin/ckpool -k -L -c /config/ckpool.conf
+        else
+          echo "ckpool binary not found in image"
+          exit 127
+        fi
+
+  axebsv-app:
+    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.1.0
+    user: "1000:1000"
+    restart: on-failure
+    stop_grace_period: 30s
+    networks:
+      default:
+        aliases:
+          - axebsv-app
+      umbrel_main_network:
+        aliases:
+          - axebsv-app
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+    environment:
+      NETWORK_IP: "${NETWORK_IP}"
+      STATIC_DIR: "/app/static"
+      APP_CHANNEL: "DEV"
+      APP_VERSION_SUFFIX: "-dev"
+      BSV_RPC_HOST: "bsvd"
+      BSV_RPC_PORT: "8332"
+      BSV_RPC_USER: "bsv"
+      BSV_RPC_PASS: "${APP_PASSWORD}"
+      CKPOOL_STATUS_DIR: "/data/pool/www/pool"
+      CKPOOL_USERS_DIR: "/data/pool/www/users"
+      CKPOOL_LOG_PATH: "/data/pool/www/ckpool.log"
+      CKPOOL_CONF_PATH: "/data/pool/config/ckpool.conf"
+
+networks:
+  umbrel_main_network:
+    external: true
+    name: umbrel_main_network

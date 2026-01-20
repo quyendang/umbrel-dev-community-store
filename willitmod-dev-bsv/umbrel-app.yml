@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-bsv
 category: bitcoin
 name: AxeBSV
-version: "0.1.3-dev"
+version: "0.1.4-dev"
 tagline: BSV node + solo pool
 description: >-
   Run a Bitcoin SV full node and a solo Stratum v1 pool (ckpool) as a single app.
@@ -26,7 +26,7 @@ dependencies: []
 port: 21216
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-dev-community-store/main/willitmod-dev-bsv/icon.png
 gallery:
-  - https://raw.githubusercontent.com/WillItMod/umbrel-dev-community-store/main/willitmod-dev-bsv/icon.png
+  - https://raw.githubusercontent.com/WillItMod/umbrel-dev-community-store/main/willitmod-dev-bsv/images/1.png
 path: ""
 defaultUsername: ""
 defaultPassword: ""

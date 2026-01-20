@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-bsv
 category: bitcoin
 name: AxeBSV
-version: "0.1.0-dev"
+version: "0.1.1-dev"
 tagline: BSV node + solo pool
 description: >-
   Run a Bitcoin SV full node and a solo Stratum v1 pool (ckpool) as a single app.

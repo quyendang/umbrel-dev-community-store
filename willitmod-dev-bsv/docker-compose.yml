@@ -27,7 +27,7 @@ services:
       - |-
         set -eu
 
-        apk add --no-cache envsubst curl >/dev/null
+        apk add --no-cache envsubst curl jq >/dev/null
 
         if [ -n "${JWT_SECRET:-}" ]; then
           envfile="/appdata/.env"
@@ -55,6 +55,20 @@ services:
           chown -R 1000:1000 /data/pool
         fi
 
+        # Apply saved UI settings (if present) to ckpool.conf so payouts go to the configured address.
+        if [ -f /data/ui/state/pool_settings.json ]; then
+          addr="$(jq -r '.payoutAddress // empty' /data/ui/state/pool_settings.json 2>/dev/null || true)"
+          if [ -n "$$addr" ] && [ -f /data/pool/config/ckpool.conf ]; then
+            tmp="$$(mktemp)"
+            if jq --arg a "$$addr" '.btcaddress=$a' /data/pool/config/ckpool.conf > "$$tmp" 2>/dev/null; then
+              mv "$$tmp" /data/pool/config/ckpool.conf
+              chown 1000:1000 /data/pool/config/ckpool.conf || true
+            else
+              rm -f "$$tmp" || true
+            fi
+          fi
+        fi
+
   bsvd:
     image: bitcoinsv/bitcoin-sv:1.2.0
     restart: unless-stopped
@@ -77,6 +91,7 @@ services:
       - bsvd
       - init
     stop_grace_period: 30s
+    init: true
     ports:
       - "8901:3333/tcp"
     volumes:
@@ -100,7 +115,7 @@ services:
         fi
 
   axebsv-app:
-    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.1.0
+    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.1.1
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

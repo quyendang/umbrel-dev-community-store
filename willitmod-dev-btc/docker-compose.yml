@@ -31,8 +31,8 @@ services:
 
         apk add --no-cache envsubst >/dev/null
 
-        # Persist Umbrel's JWT secret into ${APP_DATA_DIR}/.env so that SSH restarts
-        # (without Umbrel's exports.sh) don't boot app_proxy with an empty JWT_SECRET.
+        # Persist JWT secret into ${APP_DATA_DIR}/.env so that SSH restarts
+        # (without exports.sh) don't boot app_proxy with an empty JWT_SECRET.
         if [ -n "$${JWT_SECRET:-}" ]; then
           envfile="/appdata/.env"
           tmp="/appdata/.env.tmp"
@@ -48,8 +48,11 @@ services:
         fi
 
         mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
+        # Ensure template scripts are executable (Windows checkouts can lose +x).
+        chmod +x /data/templates/bitcoind-entrypoint.sh /data/templates/ckpool-entrypoint.sh 2>/dev/null || true
+        chown 1000:1000 /data/templates/bitcoind-entrypoint.sh /data/templates/ckpool-entrypoint.sh 2>/dev/null || true
 
-        # Umbrel may create settings.yml as root during update/install; ensure it stays writable.
+        # The host may create settings.yml as root during update/install; ensure it stays writable.
         touch /appdata/settings.yml
         chown 1000:1000 /appdata/settings.yml || true
 
@@ -84,10 +87,14 @@ services:
           if ! grep -q '"userdir"' /data/pool/config/ckpool.conf; then
             needs_ckpool_regen=1
           fi
+          # Upgrade safety: remove legacy merged-mining config (AxeBTCF).
           if grep -q '"auxd"' /data/pool/config/ckpool.conf; then
             needs_ckpool_regen=1
           fi
           if grep -q '"auxaddress"' /data/pool/config/ckpool.conf; then
+            needs_ckpool_regen=1
+          fi
+          if grep -q '/AxeBTCF/' /data/pool/config/ckpool.conf; then
             needs_ckpool_regen=1
           fi
           if [ "$$needs_ckpool_regen" -eq 1 ]; then
@@ -127,22 +134,6 @@ services:
 
   ckpool:
     image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
-    entrypoint: ["/bin/sh"]
-    command:
-      - -ec
-      - |-
-        rm -f /tmp/ckpool/*.pid 2>/dev/null || true
-        ARGS="$(cat /config/ckpool.args 2>/dev/null || true)"
-        if command -v ckpool >/dev/null 2>&1; then
-          exec ckpool -k -L -c /config/ckpool.conf $$ARGS
-        elif [ -x /bin/ckpool ]; then
-          exec /bin/ckpool -k -L -c /config/ckpool.conf $$ARGS
-        elif [ -x /usr/bin/ckpool ]; then
-          exec /usr/bin/ckpool -k -L -c /config/ckpool.conf $$ARGS
-        else
-          echo "ckpool binary not found in image"
-          exit 1
-        fi
     user: "1000:1000"
     depends_on:
       - bitcoind
@@ -153,9 +144,11 @@ services:
     volumes:
       - ${APP_DATA_DIR}/data/pool/config:/config:ro
       - ${APP_DATA_DIR}/data/pool/www:/www
+      - ${APP_DATA_DIR}/data/templates/ckpool-entrypoint.sh:/ckpool-entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/ckpool-entrypoint.sh"]
 
   app:
-    image: ghcr.io/willitmod/axebtc-app-umbrel-dev:0.7.75-dev
+    image: ghcr.io/willitmod/axebtc-app-umbrel-dev:0.7.76-dev
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

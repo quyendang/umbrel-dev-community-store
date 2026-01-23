@@ -8,7 +8,15 @@ description: >-
   Run a Bitcoin (BTC) full node (Bitcoin Core or Bitcoin Knots) and a solo Stratum v1 pool (ckpool) as a single Umbrel app installation.
 
 
-  This DEV update removes Fractal merged mining (AxeBTCF). On first launch, AxeBTC can delete old Fractal node data to reclaim disk space, while keeping your Bitcoin data.
+  IMPORTANT (DEV update):
+    - AxeBTCF (Fractal merged mining) has been removed because it was unstable for many users.
+    - Updating to this version permanently removes Fractal support from this app ID.
+    - Your Bitcoin node data is kept, but Fractal data is no longer used.
+
+
+  On first launch after updating, AxeBTC will show a popup offering to delete old Fractal node data to reclaim disk space.
+  If you accept, Fractal data will be deleted.
+  If you choose "Not now", the data is left on disk but will remain unused by AxeBTC.
 
 
   Miner connection:

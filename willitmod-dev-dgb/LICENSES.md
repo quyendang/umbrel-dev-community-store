@@ -1,6 +1,6 @@
 ## Licenses (Upstream)
 
-This Umbrel app composes upstream components without patching their source.
+This app composes upstream components without patching their source.
 
 - DigiByte Core: MIT License
   - Source: https://github.com/digibyte-core/digibyte

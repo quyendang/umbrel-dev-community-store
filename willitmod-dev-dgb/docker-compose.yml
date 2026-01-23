@@ -3,12 +3,12 @@ version: "3.7"
 services:
   app_proxy:
     environment:
-      # Use a unique DNS alias to avoid collisions on Umbrel's shared Docker network.
+      # Use a unique DNS alias to avoid collisions on the host's shared Docker network.
       APP_HOST: axedgb-app
       APP_PORT: 3000
-      # Verify Umbrel auth tokens using the same secret the auth-server uses.
-      # Umbrel's auth-server signs tokens with JWT_SECRET.
-      # When starting/restarting via Umbrel, exports.sh should populate JWT_SECRET.
+      # Verify auth tokens using the same secret the auth-server uses.
+      # The auth-server signs tokens with JWT_SECRET.
+      # When starting/restarting via the host UI, exports.sh should populate JWT_SECRET.
       JWT_SECRET: "${JWT_SECRET}"
     networks:
       - umbrel_main_network
@@ -50,8 +50,8 @@ services:
 
         apk add --no-cache envsubst curl jq postgresql-client >/dev/null
 
-        # Persist Umbrel's JWT secret into ${APP_DATA_DIR}/.env so that SSH restarts
-        # (without Umbrel's exports.sh) don't boot app_proxy with an empty JWT_SECRET.
+        # Persist JWT secret into ${APP_DATA_DIR}/.env so that SSH restarts
+        # (without exports.sh) don't boot app_proxy with an empty JWT_SECRET.
         if [ -n "${JWT_SECRET:-}" ]; then
           envfile="/appdata/.env"
           tmp="/appdata/.env.tmp"
@@ -719,7 +719,7 @@ services:
       - ${APP_DATA_DIR}/data/templates/dgb-entrypoint.sh:/dgb-entrypoint.sh:ro
     entrypoint: ["/bin/sh", "/dgb-entrypoint.sh"]
     healthcheck:
-      # Treat "warming up" states as healthy so Umbrel doesn't hide the UI while syncing.
+      # Treat "warming up" states as healthy so the host UI doesn't hide the app while syncing.
       test:
         [
           "CMD-SHELL",

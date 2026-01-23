@@ -35,8 +35,8 @@ services:
 
         apk add --no-cache envsubst curl python3 >/dev/null
 
-        # Persist Umbrel's JWT secret into ${APP_DATA_DIR}/.env so that SSH restarts
-        # (without Umbrel's exports.sh) don't boot app_proxy with an empty JWT_SECRET.
+        # Persist JWT secret into ${APP_DATA_DIR}/.env so that SSH restarts
+        # (without exports.sh) don't boot app_proxy with an empty JWT_SECRET.
         if [ -n "$${JWT_SECRET:-}" ]; then
           envfile="/appdata/.env"
           tmp="/appdata/.env.tmp"
@@ -104,7 +104,7 @@ services:
         path.write_text(text[:idx] + insert + text[idx:], encoding="utf-8")
         PY
           fi
-          # Upgrade: ensure Umbrel restarts don't hang for many minutes when Fractal is enabled.
+          # Upgrade: ensure restarts don't hang for many minutes when Fractal is enabled.
           if ! grep -q 'AXEBTCF_FAST_STOP' /data/templates/fractald-entrypoint.sh 2>/dev/null; then
         python3 - <<'PY' || true
         from pathlib import Path
@@ -133,7 +133,7 @@ services:
                 nums = " ".join(str(i) for i in range(1, 46))
                 replacement = (
                     "  # AXEBTCF_FAST_STOP\n"
-                    "  # Wait up to ~90s for a clean shutdown (Umbrel restarts should be quick).\n"
+                    "  # Wait up to ~90s for a clean shutdown (app restarts should be quick).\n"
                     f"  for _ in {nums}; do\n"
                 )
                 text = text[:cidx] + replacement + text[eol + 1 :]
@@ -145,7 +145,7 @@ services:
           chown 1000:1000 /data/templates/fractald-entrypoint.sh || true
         fi
 
-        # Umbrel may create settings.yml as root during update/install; ensure it stays writable.
+        # The host may create settings.yml as root during update/install; ensure it stays writable.
         touch /appdata/settings.yml
         chown 1000:1000 /appdata/settings.yml || true
 

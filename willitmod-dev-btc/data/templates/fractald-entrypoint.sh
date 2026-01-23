@@ -39,7 +39,7 @@ calc_dbcache() {
   mem_kb="$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)"
   mem_mb="$((mem_kb / 1024))"
   # IBD is extremely disk-IO heavy; using more dbcache helps a lot on typical
-  # Umbrel hardware. Default to 8GB on >=16GB systems; keep it bounded to avoid
+  # Typical home hardware. Default to 8GB on >=16GB systems; keep it bounded to avoid
   # OOM on low-memory systems.
   if [ "${mem_mb}" -ge 16384 ] 2>/dev/null; then
     dbcache=8192
@@ -166,7 +166,7 @@ stop_node() {
   fi
 
   # AXEBTCF_FAST_STOP
-  # Wait up to ~90s for a clean shutdown (Umbrel restarts should be quick).
+  # Wait up to ~90s for a clean shutdown (app restarts should be quick).
   for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45; do
     if ! kill -0 "${pid}" 2>/dev/null; then
       rm -f "${PID_FILE}" || true

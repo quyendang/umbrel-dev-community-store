@@ -3,10 +3,10 @@ version: "3.7"
 services:
   app_proxy:
     environment:
-      # Use a unique DNS alias to avoid collisions on Umbrel's shared Docker network.
+      # Use a unique DNS alias to avoid collisions on the host's shared Docker network.
       APP_HOST: axebch-app
       APP_PORT: 3000
-      # Verify Umbrel auth tokens using the same secret the auth-server uses.
+      # Verify auth tokens using the same secret the auth-server uses.
       JWT_SECRET: "${JWT_SECRET}"
     networks:
       - umbrel_main_network
@@ -32,8 +32,8 @@ services:
 
         apk add --no-cache envsubst curl >/dev/null
 
-        # Persist Umbrel's JWT secret into ${APP_DATA_DIR}/.env so that SSH restarts
-        # (without Umbrel's exports.sh) don't boot app_proxy with an empty JWT_SECRET.
+        # Persist JWT secret into ${APP_DATA_DIR}/.env so that SSH restarts
+        # (without exports.sh) don't boot app_proxy with an empty JWT_SECRET.
         if [ -n "${JWT_SECRET:-}" ]; then
           envfile="/appdata/.env"
           tmp="/appdata/.env.tmp"
@@ -50,7 +50,7 @@ services:
 
         mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users /data/templates
 
-        # Umbrel may create settings.yml as root during update/install; ensure it stays writable.
+        # The host may create settings.yml as root during update/install; ensure it stays writable.
         touch /appdata/settings.yml
         chown 1000:1000 /appdata/settings.yml || true
 

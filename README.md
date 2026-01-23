@@ -1,6 +1,6 @@
-# WillItMod Dev Umbrel Community Store
+# WillItMod Dev Community Store
 
-Development/test Umbrel app store for WillItMod apps.
+Development/test app store for WillItMod apps.
 
 ## Apps
 
@@ -12,8 +12,8 @@ Development/test Umbrel app store for WillItMod apps.
 
 1. Install the app and let the node sync.
 2. Point miners at:
-   - BCH: `stratum+tcp://<umbrel-ip>:4567`
-   - DGB: `stratum+tcp://<umbrel-ip>:5678`
+   - BCH: `stratum+tcp://<host-ip>:4567`
+   - DGB: `stratum+tcp://<host-ip>:5678`
 
 ## Address format notes
 

@@ -5,7 +5,7 @@ name: AxeDGB
 version: "0.9.130.1-dev"
 tagline: DGB node + solo pool
 description: >-
-  Run a DigiByte full node (DigiByte Core) and a solo Stratum v1 pool (Miningcore) as a single Umbrel app installation.
+  Run a DigiByte full node (DigiByte Core) and an integrated solo Stratum v1 pool (Miningcore) as a single app.
 
 
   Features:
@@ -17,8 +17,8 @@ description: >-
 
   Miner connection:
     - Set your solo payout address in the app Settings tab.
-    - SHA256 Stratum URL: `stratum+tcp://<your-umbrel-ip>:5678`
-    - Scrypt Stratum URL: `stratum+tcp://<your-umbrel-ip>:5679`
+    - SHA256 Stratum URL: `stratum+tcp://<your-host-ip>:5678`
+    - Scrypt Stratum URL: `stratum+tcp://<your-host-ip>:5679`
     - Username: a worker label (recommended: `rig01.workername`). `walletAddress.workername` also works, but it does not control payout.
     - Password: anything
 
@@ -29,7 +29,7 @@ description: >-
     - Solo mining is extremely unlikely to find blocks without significant hashrate.
 
 
-  Backend:
+  Components:
     - DigiByte Core (MIT): https://github.com/digibyte-core/digibyte
     - Miningcore (GPLv3): https://github.com/oliverw/miningcore
 

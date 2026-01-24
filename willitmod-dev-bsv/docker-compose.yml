@@ -53,18 +53,20 @@ services:
         fi
 
         # Keep critical policy values aligned with the app template (existing installs keep their old config otherwise).
+        # NOTE: docker-compose performs $VAR substitution in yaml; use $$ to pass $VAR through to the shell.
         cfg="/data/node/bitcoin.conf"
-        set_kv() {
-          k="$1"
-          v="$2"
-          if grep -qE "^[[:space:]]*${k}=" "$cfg" 2>/dev/null; then
-            sed -i "s/^[[:space:]]*${k}=.*/${k}=${v}/" "$cfg"
-          else
-            printf "%s=%s\n" "$k" "$v" >> "$cfg"
-          fi
-        }
-        set_kv excessiveblocksize 0
-        set_kv maxstackmemoryusageconsensus 0
+
+        if grep -qE '^[[:space:]]*excessiveblocksize=' "$$cfg" 2>/dev/null; then
+          sed -i 's/^[[:space:]]*excessiveblocksize=.*/excessiveblocksize=0/' "$$cfg"
+        else
+          echo 'excessiveblocksize=0' >> "$$cfg"
+        fi
+
+        if grep -qE '^[[:space:]]*maxstackmemoryusageconsensus=' "$$cfg" 2>/dev/null; then
+          sed -i 's/^[[:space:]]*maxstackmemoryusageconsensus=.*/maxstackmemoryusageconsensus=0/' "$$cfg"
+        else
+          echo 'maxstackmemoryusageconsensus=0' >> "$$cfg"
+        fi
 
         if ! grep -qE '^[[:space:]]*minminingtxfee=' /data/node/bitcoin.conf 2>/dev/null; then
           echo "minminingtxfee=0.000005" >> /data/node/bitcoin.conf

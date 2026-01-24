@@ -29,7 +29,7 @@ services:
       - |-
         set -eu
 
-        apk add --no-cache envsubst >/dev/null
+        apk add --no-cache envsubst jq >/dev/null
 
         # Persist JWT secret into ${APP_DATA_DIR}/.env so that SSH restarts
         # (without exports.sh) don't boot app_proxy with an empty JWT_SECRET.
@@ -96,6 +96,10 @@ services:
           # - Remove any AuxPoW (Fractal) config keys from older AxeBTCF installs.
           existing_addr="$$(grep -oE '\"btcaddress\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' /data/pool/config/ckpool.conf | head -n 1 | cut -d: -f2- | tr -d ' \"' || true)"
           needs_ckpool_regen=0
+          # If ckpool.conf isn't valid JSON, regenerate it (fixes broken escapes like "btcaddress": "\1").
+          if ! jq -e . /data/pool/config/ckpool.conf >/dev/null 2>&1; then
+            needs_ckpool_regen=1
+          fi
           if ! grep -q '"btcaddress"' /data/pool/config/ckpool.conf; then
             needs_ckpool_regen=1
           fi

@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-btc
 category: bitcoin
 name: AxeBTC
-version: "0.7.79-dev"
+version: "0.7.80-dev"
 tagline: BTC node + solo pool
 description: >-
   Run a Bitcoin (BTC) full node (Bitcoin Core or Bitcoin Knots) and an integrated solo Stratum v1 pool (ckpool) as a single app.

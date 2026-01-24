@@ -94,6 +94,7 @@ services:
           # Upgrade safety:
           # - Ensure ckpool.conf has webdir/userdir so worker stats are written.
           # - Remove any AuxPoW (Fractal) config keys from older AxeBTCF installs.
+          existing_addr="$$(grep -oE '\"btcaddress\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' /data/pool/config/ckpool.conf | head -n 1 | cut -d: -f2- | tr -d ' \"' || true)"
           needs_ckpool_regen=0
           if ! grep -q '"btcaddress"' /data/pool/config/ckpool.conf; then
             needs_ckpool_regen=1
@@ -115,20 +116,18 @@ services:
             needs_ckpool_regen=1
           fi
           # Repair: invalid JSON caused by an escaped backreference (e.g. "btcaddress": "\1").
-          # A normal ckpool.conf should never contain backslashes.
-          if grep -q '\\\\' /data/pool/config/ckpool.conf; then
-            needs_ckpool_regen=1
-          fi
+          case "$$existing_addr" in
+            *\\*) needs_ckpool_regen=1 ;;
+          esac
           if [ "$$needs_ckpool_regen" -eq 1 ]; then
-            # Extract btcaddress without sed backreferences (some compose tooling over-escapes \1 and breaks extraction).
-            existing_addr="$$(grep -oE '\"btcaddress\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' /data/pool/config/ckpool.conf | head -n 1 | cut -d: -f2- | tr -d ' \"' || true)"
-            # If the address we found is a broken backreference or otherwise malformed, ignore it.
-            if printf '%s' "$$existing_addr" | grep -q '\\\\'; then
-              existing_addr=""
-            fi
-            if [ -n "$$existing_addr" ] && [ "$$existing_addr" != "CHANGEME_BTC_PAYOUT_ADDRESS" ]; then
-              export PAYOUT_ADDRESS="$$existing_addr"
-            fi
+            # Preserve a valid existing payout address when regenerating.
+            case "$$existing_addr" in
+              bc1*|1*|3*)
+                if [ "$$existing_addr" != "CHANGEME_BTC_PAYOUT_ADDRESS" ]; then
+                  export PAYOUT_ADDRESS="$$existing_addr"
+                fi
+                ;;
+            esac
             mv /data/pool/config/ckpool.conf "/data/pool/config/ckpool.conf.bak.$(date +%s 2>/dev/null || echo 0)" || true
             envsubst < /data/templates/ckpool.conf.template > /data/pool/config/ckpool.conf
             chown -R 1000:1000 /data/pool

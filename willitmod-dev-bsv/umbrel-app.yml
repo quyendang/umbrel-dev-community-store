@@ -5,7 +5,7 @@ name: AxeBSV
 version: "0.7.160-dev"
 tagline: BSV node + solo pool
 description: >-
-  IMPORTANT: AMD64/x86_64 only. This build will NOT run on ARM/Raspberry Pi.
+  IMPORTANT: AMD64/x86_64 only. ARM/arm64 (Raspberry Pi) is not supported because the BSV node image (bitcoinsv/bitcoin-sv:1.2.0) is amd64-only.
 
   Run a Bitcoin SV full node and a solo Stratum v1 pool (ckpool) as a single app.
 
@@ -18,7 +18,7 @@ description: >-
 
   Notes:
     - Payout address must be a legacy Base58 address (`1...` / `3...`). CashAddr is not supported.
-    - ARM/arm64 is not supported yet (needs a stable arm64 BSV node build).
+    - ARM/arm64 is not supported (no official arm64 node image for this build).
     - ALPHA: expect breaking changes while this is being tested on 5tratumOS.
 developer: WillItMod
 website: https://github.com/WillItMod/AxeBSV_Release

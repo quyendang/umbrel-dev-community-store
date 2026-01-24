@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-bsv
 category: bitcoin
 name: AxeBSV
-version: "0.7.151-dev"
+version: "0.7.155-dev"
 tagline: BSV node + solo pool
 description: >-
   IMPORTANT: AMD64/x86_64 only. This build will NOT run on ARM/Raspberry Pi.
@@ -11,7 +11,7 @@ description: >-
 
 
   Miner connection:
-    - URL: `stratum+tcp://<your-umbrel-ip>:8901`
+    - URL: `stratum+tcp://<node-ip>:8901`
     - Username: worker name (optional)
     - Password: anything
 
@@ -21,9 +21,9 @@ description: >-
     - ARM/arm64 is not supported yet (needs a stable arm64 BSV node build).
     - ALPHA: expect breaking changes while this is being tested on 5tratumOS.
 developer: WillItMod
-website: https://github.com/WillItMod/umbrel-dev-community-store
-repo: https://github.com/WillItMod/umbrel-dev-community-store
-support: https://github.com/WillItMod/umbrel-dev-community-store/issues
+website: https://github.com/WillItMod/AxeBSV_Release
+repo: https://github.com/WillItMod/AxeBSV_Release
+support: https://github.com/WillItMod/AxeBSV_Release/issues
 dependencies: []
 port: 21216
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-dev-community-store/main/willitmod-dev-bsv/icon.png

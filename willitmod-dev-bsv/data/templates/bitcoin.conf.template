@@ -12,8 +12,10 @@ rpcallowip=172.16.0.0/12
 rpcallowip=192.168.0.0/16
 
 # Bitcoin SV Node mandatory defaults (safe for solo mining)
-excessiveblocksize=1000000000
-maxstackmemoryusageconsensus=100000000
+# NOTE: some mainnet nodes produce very large blocks/scripts. Setting these too low can
+# cause IBD to stall at the first oversize block. 0 = unlimited.
+excessiveblocksize=0
+maxstackmemoryusageconsensus=0
 minminingtxfee=0.000005
 
 # ZMQ (ckpool block notifications)

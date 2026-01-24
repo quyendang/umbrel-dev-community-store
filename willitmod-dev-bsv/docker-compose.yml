@@ -51,6 +51,21 @@ services:
           envsubst < /data/templates/bitcoin.conf.template > /data/node/bitcoin.conf
           chown -R 1000:1000 /data/node
         fi
+
+        # Keep critical policy values aligned with the app template (existing installs keep their old config otherwise).
+        cfg="/data/node/bitcoin.conf"
+        set_kv() {
+          k="$1"
+          v="$2"
+          if grep -qE "^[[:space:]]*${k}=" "$cfg" 2>/dev/null; then
+            sed -i "s/^[[:space:]]*${k}=.*/${k}=${v}/" "$cfg"
+          else
+            printf "%s=%s\n" "$k" "$v" >> "$cfg"
+          fi
+        }
+        set_kv excessiveblocksize 0
+        set_kv maxstackmemoryusageconsensus 0
+
         if ! grep -qE '^[[:space:]]*minminingtxfee=' /data/node/bitcoin.conf 2>/dev/null; then
           echo "minminingtxfee=0.000005" >> /data/node/bitcoin.conf
         fi
@@ -153,7 +168,7 @@ services:
         fi
 
   app:
-    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.7.157
+    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.7.158
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

@@ -120,7 +120,8 @@ services:
             needs_ckpool_regen=1
           fi
           if [ "$$needs_ckpool_regen" -eq 1 ]; then
-            existing_addr="$$(grep -oE '\"btcaddress\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' /data/pool/config/ckpool.conf | head -n 1 | sed -E 's/.*\"btcaddress\"[[:space:]]*:[[:space:]]*\"([^\"]*)\".*/\\1/' || true)"
+            # Extract btcaddress without sed backreferences (some compose tooling over-escapes \1 and breaks extraction).
+            existing_addr="$$(grep -oE '\"btcaddress\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' /data/pool/config/ckpool.conf | head -n 1 | cut -d: -f2- | tr -d ' \"' || true)"
             # If the address we found is a broken backreference or otherwise malformed, ignore it.
             if printf '%s' "$$existing_addr" | grep -q '\\\\'; then
               existing_addr=""

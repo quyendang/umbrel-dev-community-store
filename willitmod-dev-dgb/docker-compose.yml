@@ -325,9 +325,9 @@ services:
                     | (.ports |= (if type=="object" then with_entries(.value |= (if type=="object" then (.listenAddress="0.0.0.0") else . end)) else . end))
                     | (if .id=="dgb-sha256-1" then
                         (.ports |= (if type=="object" then with_entries(.value |= (if type=="object" then
-                          (.varDiff.targetTime = 7)
-                          | (.varDiff.retargetTime = 15)
-                          | (.varDiff.variancePercent = 20)
+                          (.varDiff.targetTime = 15)
+                          | (.varDiff.retargetTime = 120)
+                          | (.varDiff.variancePercent = 50)
                         else . end)) else . end))
                       else . end)
                     | (.daemons = ((.daemons // []) | (if type=="array" then map(if type=="object" then (.port=$$rpcport) else . end) else . end)))
@@ -415,9 +415,9 @@ services:
                      | (if ($$startdiff > 0) then .difficulty = $$startdiff else . end)
                      | (if ($$mindiff > 0) then .varDiff.minDiff = $$mindiff else . end)
                      | (if ($$maxdiff > 0) then .varDiff.maxDiff = $$maxdiff else .varDiff.maxDiff = null end)
-                     | (.varDiff.targetTime = 7)
-                     | (.varDiff.retargetTime = 15)
-                     | (.varDiff.variancePercent = 20);
+                     | (.varDiff.targetTime = 15)
+                     | (.varDiff.retargetTime = 120)
+                     | (.varDiff.variancePercent = 50);
 
                    (.pools |= (if type=="array" then map(
                      if (.id=="dgb-sha256-1") then
@@ -494,9 +494,9 @@ services:
                    | (if ($$startdiff > 0) then .difficulty = $$startdiff else . end)
                    | (if ($$mindiff > 0) then .varDiff.minDiff = $$mindiff else . end)
                    | (if ($$maxdiff > 0) then .varDiff.maxDiff = $$maxdiff else .varDiff.maxDiff = null end)
-                   | (.varDiff.targetTime = 7)
-                   | (.varDiff.retargetTime = 15)
-                   | (.varDiff.variancePercent = 20);
+                   | (.varDiff.targetTime = 15)
+                   | (.varDiff.retargetTime = 120)
+                   | (.varDiff.variancePercent = 50);
 
                  (.pools |= (if type=="array" then map(
                    if (.id=="dgb-sha256-1") then
@@ -777,7 +777,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/config/coins.json:/app/coins.json:ro
 
   app:
-    image: ghcr.io/willitmod/axedgb-app:0.9.140
+    image: ghcr.io/willitmod/axedgb-app:0.9.141
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

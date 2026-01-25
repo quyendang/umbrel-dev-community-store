@@ -63,9 +63,9 @@
           "varDiff": {
             "minDiff": ${SHA256_MINDIFF},
             "maxDiff": ${SHA256_MAXDIFF_JSON},
-            "targetTime": 7,
-            "retargetTime": 15,
-            "variancePercent": 20
+            "targetTime": 15,
+            "retargetTime": 120,
+            "variancePercent": 50
           }
         }
       },

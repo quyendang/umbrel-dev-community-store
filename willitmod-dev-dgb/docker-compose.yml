@@ -305,7 +305,7 @@ services:
                   if type=="object" then
                     (.paymentProcessing = (.paymentProcessing // {"enabled": false}))
                     | (.blockRefreshInterval = ((.blockRefreshInterval // 500) | if . < 2000 then 2000 else . end))
-                    | (.jobRebroadcastTimeout = ((.jobRebroadcastTimeout // 60) | if . < 60 then 60 else . end))
+                    | (.jobRebroadcastTimeout = 60)
                     | (.ports |= (if type=="object" then with_entries(.value |= (if type=="object" then (.listenAddress="0.0.0.0") else . end)) else . end))
                     | (if .id=="dgb-sha256-1" then
                         (.ports |= (if type=="object" then with_entries(.value |= (if type=="object" then
@@ -758,7 +758,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/config/coins.json:/app/coins.json:ro
 
   app:
-    image: ghcr.io/willitmod/axedgb-app:0.9.135
+    image: ghcr.io/willitmod/axedgb-app:0.9.136
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

@@ -22,10 +22,11 @@ description: >-
     - ALPHA: expect breaking changes while this is being tested on 5tratumOS.
 
 
-  Blockchain data disclaimer:
-    - Blockchains may contain third‑party content (including arbitrary data) that could be illegal, harmful, or offensive in some jurisdictions.
-    - By running this app you may download, store, and serve blockchain data; you are responsible for complying with local laws and for your own operational security.
-    - Bitcoin SV in particular has historically permitted large data payloads; do not run this node if you are not comfortable with the risks.
+  Blockchain data note (BSV):
+    - BTC, BCH, and BSV can all carry arbitrary data; BSV historically allowed larger payloads (scale differs, not the principle).
+    - This app enables pruning by default (`prune=2500`) to keep only a small rolling tail of recent blocks and reduce retained history.
+    - Chain data is not indexed/searchable as media by default; accessing or reconstructing content requires deliberate tooling.
+    - If you have legal/optics concerns, don’t install this app (or remove it).
 developer: WillItMod
 website: https://github.com/WillItMod/AxeBSV_Release
 repo: https://github.com/WillItMod/AxeBSV_Release

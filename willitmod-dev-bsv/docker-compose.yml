@@ -55,6 +55,18 @@ services:
         # Keep critical policy values aligned with the app template (existing installs keep their old config otherwise).
         # NOTE: docker-compose performs $VAR substitution in yaml; use $$ to pass $VAR through to the shell.
         cfg="/data/node/bitcoin.conf"
+        prune_target=2500
+
+        # Pruning: default to a small rolling tail to reduce retained historical data.
+        # If the user explicitly set a non-zero prune value, keep it.
+        if grep -qE '^[[:space:]]*prune=' "$$cfg" 2>/dev/null; then
+          current_prune="$$(grep -E '^[[:space:]]*prune=' \"$$cfg\" | tail -n 1 | sed -E 's/^[[:space:]]*prune=([0-9]+).*/\\1/' || true)"
+          if [ -z "$$current_prune" ] || [ "$$current_prune" = "0" ]; then
+            sed -i "s/^[[:space:]]*prune=.*/prune=$$prune_target/" "$$cfg"
+          fi
+        else
+          echo "prune=$$prune_target" >> "$$cfg"
+        fi
 
         if grep -qE '^[[:space:]]*excessiveblocksize=' "$$cfg" 2>/dev/null; then
           sed -i 's/^[[:space:]]*excessiveblocksize=.*/excessiveblocksize=0/' "$$cfg"

@@ -27,4 +27,4 @@ listen=1
 upnp=1
 
 # Optional pruning (set by AxeBSV on first run)
-# prune=0
+prune=2500

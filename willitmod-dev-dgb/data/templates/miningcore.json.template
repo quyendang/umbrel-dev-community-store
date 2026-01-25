@@ -44,8 +44,8 @@
       "enabled": true,
       "coin": "digibyte-sha256",
       "address": "D596YFweJQuHY1BbjazZYmAbt8jJPbKehC",
-      "blockRefreshInterval": 500,
-      "jobRebroadcastTimeout": 10,
+      "blockRefreshInterval": 2000,
+      "jobRebroadcastTimeout": 60,
       "clientConnectionTimeout": 600,
       "paymentProcessing": {
         "enabled": false
@@ -83,8 +83,8 @@
       "enabled": true,
       "coin": "digibyte-scrypt",
       "address": "D596YFweJQuHY1BbjazZYmAbt8jJPbKehC",
-      "blockRefreshInterval": 500,
-      "jobRebroadcastTimeout": 10,
+      "blockRefreshInterval": 2000,
+      "jobRebroadcastTimeout": 60,
       "clientConnectionTimeout": 600,
       "paymentProcessing": {
         "enabled": false

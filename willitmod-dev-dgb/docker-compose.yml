@@ -13,6 +13,22 @@ services:
     networks:
       - umbrel_main_network
 
+  init_permissions:
+    image: alpine:3.22.1
+    restart: "no"
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+    command:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+        # Ensure Postgres can read its data directory. Some hosts/app-updates can
+        # accidentally chown this to 1000:1000, causing Miningcore API 500s.
+        mkdir -p /data/pool/postgres
+        chown -R 70:70 /data/pool/postgres || true
+        chmod 700 /data/pool/postgres || true
+
   init:
     image: alpine:3.22.1
     volumes:
@@ -735,6 +751,9 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     shm_size: "256mb"
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
     environment:
       POSTGRES_USER: "miningcore"
       POSTGRES_PASSWORD: "${APP_PASSWORD}"
@@ -758,7 +777,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/config/coins.json:/app/coins.json:ro
 
   app:
-    image: ghcr.io/willitmod/axedgb-app:0.9.139
+    image: ghcr.io/willitmod/axedgb-app:0.9.140
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

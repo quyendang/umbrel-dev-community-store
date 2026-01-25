@@ -26,6 +26,8 @@ description: >-
 
   Notes:
     - For maximum compatibility, use a legacy BCH Base58 address (`1...` / `3...`) as the payout address.
+    - Initial sync can take a long time and a lot of bandwidth/storage (the node downloads and validates the chain).
+    - Blockchains can carry arbitrary data (e.g. via `OP_RETURN`). That’s not unique to any one chain.
     - Many wallets (e.g. Trust Wallet) show CashAddr (`q...` / `p...`). AxeBCH automatically converts CashAddr to legacy format for ckpool compatibility and shows the converted address.
     - Conversion happens locally on your device; AxeBCH does not send your address to any external service.
     - Reference converter (CashAddr <-> legacy): https://bch.info/en/tools/cashaddr

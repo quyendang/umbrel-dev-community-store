@@ -14,6 +14,8 @@ description: >-
 
 
   Notes:
+    - Initial sync can take a long time and a lot of bandwidth/storage (the node downloads and validates the chain).
+    - Blockchains can carry arbitrary data (e.g. via `OP_RETURN`). That’s not unique to any one chain.
     - Set your payout address in the app Settings tab.
     - Pool settings apply automatically; miners may briefly reconnect after saving.
     - On first launch you must pick Bitcoin Core vs Knots before sync starts.

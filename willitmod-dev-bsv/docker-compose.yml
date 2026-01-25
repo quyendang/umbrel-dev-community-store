@@ -55,17 +55,20 @@ services:
         # Keep critical policy values aligned with the app template (existing installs keep their old config otherwise).
         # NOTE: docker-compose performs $VAR substitution in yaml; use $$ to pass $VAR through to the shell.
         cfg="/data/node/bitcoin.conf"
-        prune_target=2500
+        prune_default=550
+        prune_max=2500
 
-        # Pruning: default to a small rolling tail to reduce retained historical data.
-        # If the user explicitly set a non-zero prune value, keep it.
+        # Pruning is mandatory for AxeBSV to reduce retained history.
+        # Enforce: missing/0/<550 -> 550, >2500 -> 2500.
         if grep -qE '^[[:space:]]*prune=' "$$cfg" 2>/dev/null; then
           current_prune="$$(grep -E '^[[:space:]]*prune=' \"$$cfg\" | tail -n 1 | sed -E 's/^[[:space:]]*prune=([0-9]+).*/\\1/' || true)"
-          if [ -z "$$current_prune" ] || [ "$$current_prune" = "0" ]; then
-            sed -i "s/^[[:space:]]*prune=.*/prune=$$prune_target/" "$$cfg"
+          if [ -z "$$current_prune" ] || [ "$$current_prune" = "0" ] || [ "$$current_prune" -lt "$$prune_default" ]; then
+            sed -i "s/^[[:space:]]*prune=.*/prune=$$prune_default/" "$$cfg"
+          elif [ "$$current_prune" -gt "$$prune_max" ]; then
+            sed -i "s/^[[:space:]]*prune=.*/prune=$$prune_max/" "$$cfg"
           fi
         else
-          echo "prune=$$prune_target" >> "$$cfg"
+          echo "prune=$$prune_default" >> "$$cfg"
         fi
 
         if grep -qE '^[[:space:]]*excessiveblocksize=' "$$cfg" 2>/dev/null; then
@@ -186,7 +189,7 @@ services:
         fi
 
   app:
-    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.7.161
+    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.7.162
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

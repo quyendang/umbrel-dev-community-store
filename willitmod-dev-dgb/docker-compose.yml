@@ -28,9 +28,16 @@ services:
         mkdir -p /data/pool/postgres
         chown -R 70:70 /data/pool/postgres || true
         chmod 700 /data/pool/postgres || true
+        # Ensure the UI can update digibyte.conf (/data/node). If this becomes
+        # root-owned, Settings will fail with Errno 13 permission denied.
+        mkdir -p /data/node
+        chown -R 1000:1000 /data/node || true
 
   init:
     image: alpine:3.22.1
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
     volumes:
       - ${APP_DATA_DIR}/data:/data
       - ${APP_DATA_DIR}:/appdata
@@ -777,11 +784,14 @@ services:
       - ${APP_DATA_DIR}/data/pool/config/coins.json:/app/coins.json:ro
 
   app:
-    image: ghcr.io/willitmod/axedgb-app:0.9.141
+    image: ghcr.io/willitmod/axedgb-app:0.9.142
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s
     # Keep the UI up even if the node/pool is still starting.
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
     networks:
       default:
         aliases:

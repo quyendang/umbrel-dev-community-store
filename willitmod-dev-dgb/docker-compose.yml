@@ -728,7 +728,7 @@ services:
         fi
 
   dgbd:
-    image: ghcr.io/willitmod/digibyte:8.22.2
+    image: ghcr.io/willitmod/digibyte:8.26.2
     user: "1000:1000"
     restart: unless-stopped
     stop_grace_period: 15m30s
@@ -814,7 +814,7 @@ services:
       MININGCORE_CONF_PATH: "/data/pool/config/miningcore.json"
       APP_CHANNEL: "BETA"
       APP_VERSION_SUFFIX: "-dev"
-      DGB_IMAGE: "ghcr.io/willitmod/digibyte:8.22.2"
+      DGB_IMAGE: "ghcr.io/willitmod/digibyte:8.26.2"
       MININGCORE_IMAGE: "ghcr.io/willitmod/axedgb-miningcore:axedgb-0.8.10-r24"
       POSTGRES_IMAGE: "postgres:16-alpine"
       STATIC_DIR: "/app/static"

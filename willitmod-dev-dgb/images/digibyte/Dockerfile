@@ -1,43 +1,33 @@
 FROM debian:bookworm-slim
 
-# DigiByte Core v8.26.1 does not publish an official arm64 Linux tarball upstream.
-# For arm64, we vendor a repacked `digibyte-8.26.1-aarch64-linux-gnu.tar.xz` extracted from a known-good build.
+# DigiByte Core: install from official upstream release tarballs (amd64 + arm64).
 ARG TARGETARCH
-ARG DGB_RELEASE_TAG="v8.26.1"
-ARG DGB_VERSION="8.26.1"
-ARG DGB_AMD64_SHA256="6dec9e0a0ddaab5e9e18022e57d6e2acccd73413e46b3d4818967e891fc04fc4"
-ARG DGB_ARM64_TAR_XZ_SHA256="84833abb948beeb95470bfcda406f5a4ce3c1ecc21ddce508c95c307e96fdda8"
+ARG DGB_RELEASE_TAG="v8.26.2"
+ARG DGB_VERSION="8.26.2"
+ARG DGB_AMD64_SHA256="bffa56a4609e374010da36125c7f84521ef449f6c741a3ef765be4a23264535d"
+ARG DGB_ARM64_SHA256="9fc818ca15b849a609be0714751e7673eeba1b35936fb42acdcbcf2511554313"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates curl tar xz-utils libstdc++6 libgcc-s1 libevent-2.1-7 && \
+    apt-get install -y --no-install-recommends ca-certificates curl gzip tar libstdc++6 libgcc-s1 libevent-2.1-7 && \
     rm -rf /var/lib/apt/lists/*
-
-COPY assets/digibyte-8.26.1-aarch64-linux-gnu.tar.xz /tmp/dgb-arm64.tar.xz
 
 RUN set -eu; \
     case "${TARGETARCH:-}" in \
       amd64) asset="digibyte-${DGB_VERSION}-x86_64-linux-gnu.tar.gz"; sha="${DGB_AMD64_SHA256}" ;; \
-      arm64) asset=""; sha="${DGB_ARM64_TAR_XZ_SHA256}" ;; \
+      arm64) asset="digibyte-${DGB_VERSION}-aarch64-linux-gnu.tar.gz"; sha="${DGB_ARM64_SHA256}" ;; \
       *) echo "unsupported TARGETARCH=${TARGETARCH:-<unset>}"; exit 1 ;; \
     esac; \
-    if [ "${TARGETARCH:-}" = "arm64" ]; then \
-      echo "${sha}  /tmp/dgb-arm64.tar.xz" | sha256sum -c -; \
-      mkdir -p /opt/digibyte; \
-      tar -xJf /tmp/dgb-arm64.tar.xz -C /opt/digibyte --strip-components=1; \
-      rm -f /tmp/dgb-arm64.tar.xz; \
-      if [ -f /opt/digibyte/lib/libdigibyteconsensus.so.0.0.0 ]; then \
-        cp -f /opt/digibyte/lib/libdigibyteconsensus.so.0.0.0 /opt/digibyte/lib/libdigibyteconsensus.so.0 || true; \
-        cp -f /opt/digibyte/lib/libdigibyteconsensus.so.0.0.0 /opt/digibyte/lib/libdigibyteconsensus.so || true; \
-      fi; \
-    else \
-      url="https://github.com/DigiByte-Core/digibyte/releases/download/${DGB_RELEASE_TAG}/${asset}"; \
-      curl -fsSL -o /tmp/dgb.tar.gz "${url}"; \
-      echo "${sha}  /tmp/dgb.tar.gz" | sha256sum -c -; \
-      mkdir -p /opt/digibyte; \
-      tar -xzf /tmp/dgb.tar.gz -C /opt/digibyte --strip-components=1; \
-      rm -f /tmp/dgb.tar.gz; \
+    url="https://github.com/DigiByte-Core/digibyte/releases/download/${DGB_RELEASE_TAG}/${asset}"; \
+    curl -fsSL -o /tmp/dgb.tar.gz "${url}"; \
+    echo "${sha}  /tmp/dgb.tar.gz" | sha256sum -c -; \
+    mkdir -p /opt/digibyte; \
+    tar -xzf /tmp/dgb.tar.gz -C /opt/digibyte --strip-components=1; \
+    rm -f /tmp/dgb.tar.gz; \
+    if [ -f /opt/digibyte/lib/libdigibyteconsensus.so.0.0.0 ]; then \
+      cp -f /opt/digibyte/lib/libdigibyteconsensus.so.0.0.0 /opt/digibyte/lib/libdigibyteconsensus.so.0 || true; \
+      cp -f /opt/digibyte/lib/libdigibyteconsensus.so.0.0.0 /opt/digibyte/lib/libdigibyteconsensus.so || true; \
     fi; \
     mkdir -p /opt/digibyte; \
     install -m 0755 /opt/digibyte/bin/digibyted /usr/local/bin/digibyted; \

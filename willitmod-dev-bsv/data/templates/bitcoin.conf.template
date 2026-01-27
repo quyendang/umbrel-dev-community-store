@@ -27,5 +27,5 @@ listen=1
 upnp=1
 
 # Pruning (mandatory): keep only a rolling tail of recent blocks to reduce retained history.
-# Min supported prune is 550; this app defaults to 550 and caps at 2500.
-prune=550
+# This app defaults to 2500 and caps at 5000.
+prune=2500

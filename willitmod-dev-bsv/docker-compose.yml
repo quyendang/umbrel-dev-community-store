@@ -55,11 +55,11 @@ services:
         # Keep critical policy values aligned with the app template (existing installs keep their old config otherwise).
         # NOTE: docker-compose performs $VAR substitution in yaml; use $$ to pass $VAR through to the shell.
         cfg="/data/node/bitcoin.conf"
-        prune_default=550
-        prune_max=2500
+        prune_default=2500
+        prune_max=5000
 
         # Pruning is mandatory for AxeBSV to reduce retained history.
-        # Enforce: missing/0/<550 -> 550, >2500 -> 2500.
+        # Enforce: missing/0/<2500 -> 2500, >5000 -> 5000.
         if grep -qE '^[[:space:]]*prune=' "$$cfg" 2>/dev/null; then
           current_prune="$$(grep -E '^[[:space:]]*prune=' "$$cfg" | tail -n 1 | sed -E 's/^[[:space:]]*prune=([0-9]+).*/\\1/' || true)"
           if [ -z "$$current_prune" ] || [ "$$current_prune" = "0" ] || [ "$$current_prune" -lt "$$prune_default" ]; then
@@ -189,7 +189,7 @@ services:
         fi
 
   app:
-    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.7.171
+    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.7.172
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

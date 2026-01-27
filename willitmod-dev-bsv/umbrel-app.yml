@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-bsv
 category: bitcoin
 name: AxeBSV
-version: "0.7.171-dev"
+version: "0.7.172-dev"
 tagline: BSV node + solo pool
 description: >-
   IMPORTANT: AMD64/x86_64 only. ARM/arm64 (Raspberry Pi) is not supported because the BSV node image (bitcoinsv/bitcoin-sv:1.2.0) is amd64-only.
@@ -26,8 +26,8 @@ description: >-
     - Full node sync can take a long time and a lot of bandwidth/storage (it downloads and validates the chain).
     - Blockchains can carry arbitrary data (e.g. via `OP_RETURN`). BTC/BCH/BSV all have this; BSV historically allowed larger payloads (difference is scale, not principle).
     - To reduce retained history and eliminate as much risk as possible, AxeBSV makes pruning mandatory:
-      - default `prune=550` (minimum supported)
-      - maximum `prune=2500` (safety cap)
+      - default `prune=2500`
+      - maximum `prune=5000` (safety cap)
     - On BSV node v1.2+ the chain data isn't exposed as searchable/viewable media by default; reconstruction requires deliberate tooling.
     - If you have legal/optics concerns, don't install this app (or remove it).
 developer: WillItMod

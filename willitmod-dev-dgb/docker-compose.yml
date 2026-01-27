@@ -98,9 +98,9 @@ services:
         else
           raw="$$(cat /data/node/.dbcache_mb 2>/dev/null | tr -d ' \t\r\n' || true)"
           if echo "$$raw" | grep -Eq '^[0-9]+$$'; then
-            if [ "$$raw" -lt 4096 ]; then
-              echo "[axedgb] Bumping dbcache preset to 4096MB minimum"
-              echo "4096" > /data/node/.dbcache_mb
+            if [ "$$raw" -lt 6144 ]; then
+              echo "[axedgb] Bumping dbcache preset to 6144MB minimum"
+              echo "6144" > /data/node/.dbcache_mb
               chown 1000:1000 /data/node/.dbcache_mb || true
             fi
           fi

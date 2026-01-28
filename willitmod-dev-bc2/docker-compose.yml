@@ -114,8 +114,6 @@ services:
     depends_on:
       init:
         condition: service_completed_successfully
-    ports:
-      - "8338:8338/tcp" # P2P
     volumes:
       - ${APP_DATA_DIR}/data/node:/data
 

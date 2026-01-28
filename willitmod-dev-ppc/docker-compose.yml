@@ -139,7 +139,7 @@ services:
     stop_grace_period: 30s
     init: true
     ports:
-      - "9876:3333/tcp"
+      - "8765:3333/tcp"
     volumes:
       - ${APP_DATA_DIR}/data/pool/config:/config:ro
       - ${APP_DATA_DIR}/data/pool/www:/www
@@ -162,7 +162,7 @@ services:
         fi
 
   app:
-    image: ghcr.io/willitmod/axeppc-app-umbrel-dev:0.1.3
+    image: ghcr.io/willitmod/axeppc-app-umbrel-dev:0.1.4
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

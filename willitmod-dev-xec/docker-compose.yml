@@ -165,7 +165,9 @@ services:
 
   xecd:
     build:
-      context: ./data/xecd
+      # 5tratumos installs store `data/` into ${APP_DATA_DIR}/data (not into the app dir),
+      # so the build context must point at the persisted app data directory.
+      context: "${APP_DATA_DIR}/data/xecd"
     user: "1000:1000"
     restart: unless-stopped
     stop_grace_period: 15m30s

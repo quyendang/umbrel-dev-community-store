@@ -7,6 +7,7 @@ Development/test app store for WillItMod apps.
 - **Bitcoin Cash** (`willitmod-dev-bch`): BCH full node (BCHN) + solo Stratum v1 pool (ckpool) in a single app.
 - **DigiByte** (`willitmod-dev-dgb`): DigiByte Core full node + solo Stratum v1 pool (ckpool) in a single app (experimental).
 - **eCash** (`willitmod-dev-xec`): eCash (XEC) full node + solo Stratum v1 pool (ckpool) in a single app.
+- **Peercoin** (`willitmod-dev-ppc`): Peercoin full node + solo Stratum v1 pool (ckpool) in a single app.
 - **AxeMIG** (`willitmod-dev-axemig`): data-only blockchain migration tool (experimental).
 
 ## Quick setup (solo mining)
@@ -16,6 +17,7 @@ Development/test app store for WillItMod apps.
    - BCH: `stratum+tcp://<host-ip>:4567`
    - DGB: `stratum+tcp://<host-ip>:5678`
    - XEC: `stratum+tcp://<host-ip>:3456`
+   - PPC: `stratum+tcp://<host-ip>:9876`
 
 ## Address format notes
 
@@ -37,4 +39,5 @@ Use a DigiByte address (typically Base58 `D...` / `S...` or Bech32 `dgb1...`).
 - BCHN runs from Docker Hub image `mainnet/bitcoin-cash-node` (pinned by version tag in `docker-compose.yml`).
 - ckpool runs from `ghcr.io/getumbrel/docker-ckpool-solo` (pinned by version tag in `docker-compose.yml`).
 - XEC node runs from `ghcr.io/willitmod/xecd` (pinned by version tag in `docker-compose.yml`).
-- This store repo does not rebuild or modify those upstream images; it only orchestrates them.
+- PPC node runs from `ghcr.io/willitmod/peercoin-core` (pinned by version tag in `docker-compose.yml`).
+- This store repo does not patch upstream source code; it only orchestrates upstream components via Docker images (some are built from official release tarballs).

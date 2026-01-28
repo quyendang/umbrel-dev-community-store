@@ -16,7 +16,7 @@ Development/test app store for WillItMod apps.
 2. Point miners at:
    - BCH: `stratum+tcp://<host-ip>:4567`
    - DGB: `stratum+tcp://<host-ip>:5678`
-   - XEC: `stratum+tcp://<host-ip>:3456`
+   - XEC: `stratum+tcp://<host-ip>:4321`
    - PPC: `stratum+tcp://<host-ip>:9876`
 
 ## Address format notes

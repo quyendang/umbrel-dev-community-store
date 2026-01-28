@@ -18,7 +18,7 @@ description: >-
 
   Miner connection:
     - Set your payout address in the app Settings tab.
-    - URL: `stratum+tcp://<your-host-ip>:3456`
+    - URL: `stratum+tcp://<your-host-ip>:4321`
     - Username: worker name (optional). `walletAddress.workername` also works, but it does not control payout.
       Example: `rig01.workername`
     - Password: anything

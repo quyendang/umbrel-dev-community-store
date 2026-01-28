@@ -38,6 +38,6 @@ Use a DigiByte address (typically Base58 `D...` / `S...` or Bech32 `dgb1...`).
 
 - BCHN runs from Docker Hub image `mainnet/bitcoin-cash-node` (pinned by version tag in `docker-compose.yml`).
 - ckpool runs from `ghcr.io/getumbrel/docker-ckpool-solo` (pinned by version tag in `docker-compose.yml`).
-- XEC node runs from `ghcr.io/willitmod/xecd` (pinned by version tag in `docker-compose.yml`).
+- XEC node is built locally from official Bitcoin ABC release tarballs (pinned by version in `data/xecd/Dockerfile`).
 - PPC node runs from `ghcr.io/willitmod/peercoin-core` (pinned by version tag in `docker-compose.yml`).
 - This store repo does not patch upstream source code; it only orchestrates upstream components via Docker images (some are built from official release tarballs).

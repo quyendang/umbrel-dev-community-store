@@ -166,7 +166,6 @@ services:
   xecd:
     build:
       context: ./data/xecd
-    image: ghcr.io/willitmod/xecd:0.32.7
     user: "1000:1000"
     restart: unless-stopped
     stop_grace_period: 15m30s
@@ -244,7 +243,7 @@ services:
       CKPOOL_STATUS_DIR: "/data/pool/www/pool"
       APP_CHANNEL: "DEV"
       APP_VERSION_SUFFIX: "-dev"
-      XECD_IMAGE: "ghcr.io/willitmod/xecd:0.32.7"
+      XECD_IMAGE: "Bitcoin ABC v0.32.7 (local build)"
       CKPOOL_IMAGE: "ghcr.io/getumbrel/docker-ckpool-solo:590fb2a"
       STATIC_DIR: "/app/static"
 

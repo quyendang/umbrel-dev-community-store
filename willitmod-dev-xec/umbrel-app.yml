@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-xec
 category: bitcoin
 name: AxeXEC
-version: "0.1.0-dev"
+version: "0.1.1-dev"
 tagline: XEC node + solo pool
 description: >-
   Run an eCash (XEC) full node and an integrated solo Stratum v1 pool (ckpool) as a single app.

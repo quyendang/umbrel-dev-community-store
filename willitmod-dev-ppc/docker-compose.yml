@@ -14,7 +14,6 @@ services:
     volumes:
       - ${APP_DATA_DIR}/data:/data
       - ${APP_DATA_DIR}:/appdata
-      - ./data/templates:/templates:ro
     environment:
       APPS_SUBNET: "${NETWORK_IP}/16"
       RPC_USER: "ppc"
@@ -32,9 +31,6 @@ services:
         apk add --no-cache envsubst jq >/dev/null
 
         tpl_dir="/data/templates"
-        if [ -f "/templates/peercoin.conf.template" ]; then
-          tpl_dir="/templates"
-        fi
 
         if [ -n "${JWT_SECRET:-}" ]; then
           envfile="/appdata/.env"
@@ -50,7 +46,14 @@ services:
           mv "$$tmp" "$$envfile"
         fi
 
-        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
+        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users /data/templates
+
+        if [ ! -f "$$tpl_dir/peercoin.conf.template" ] || [ ! -f "$$tpl_dir/ckpool.conf.template" ]; then
+          echo "Template files not found in $$tpl_dir. (Expected peercoin.conf.template and ckpool.conf.template)"
+          echo "Contents of $$tpl_dir:"
+          ls -la "$$tpl_dir" || true
+          exit 1
+        fi
 
         if [ ! -f /data/node/peercoin.conf ]; then
           envsubst < "$$tpl_dir/peercoin.conf.template" > /data/node/peercoin.conf

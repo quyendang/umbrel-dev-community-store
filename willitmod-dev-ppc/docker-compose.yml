@@ -60,6 +60,16 @@ services:
           chown -R 1000:1000 /data/node || true
         fi
 
+        # Self-heal older/invalid configs that enable multiple networks simultaneously.
+        # Peercoin refuses to start if both testnet and regtest are enabled.
+        cfg="/data/node/peercoin.conf"
+        if [ -f "$$cfg" ]; then
+          if grep -qE '^[[:space:]]*testnet=1([[:space:]]*#.*)?$$' "$$cfg" && grep -qE '^[[:space:]]*regtest=1([[:space:]]*#.*)?$$' "$$cfg"; then
+            echo "Found invalid Peercoin network flags (testnet+regtest). Removing both to default back to mainnet."
+            sed -E -i '/^[[:space:]]*testnet=1([[:space:]]*#.*)?$$/d; /^[[:space:]]*regtest=1([[:space:]]*#.*)?$$/d' "$$cfg" || true
+          fi
+        fi
+
         needs_ckpool_regen=0
         if [ -f /data/pool/config/ckpool.conf ]; then
           if ! grep -qE '"btcd"[[:space:]]*:[[:space:]]*\[' /data/pool/config/ckpool.conf; then
@@ -153,7 +163,7 @@ services:
         fi
 
   app:
-    image: ghcr.io/willitmod/axeppc-app-umbrel-dev:0.1.1
+    image: ghcr.io/willitmod/axeppc-app-umbrel-dev:0.1.2
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

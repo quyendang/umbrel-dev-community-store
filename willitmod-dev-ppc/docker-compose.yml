@@ -110,7 +110,7 @@ services:
 
   ppcd:
     build:
-      context: ./data/peercoind
+      context: ${APP_DATA_DIR}/data/peercoind
     image: ghcr.io/willitmod/peercoin-core:0.15.1ppc
     user: "1000:1000"
     restart: unless-stopped

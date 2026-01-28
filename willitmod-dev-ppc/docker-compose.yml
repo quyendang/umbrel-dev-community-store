@@ -153,7 +153,7 @@ services:
         fi
 
   app:
-    image: ghcr.io/willitmod/axeppc-app-umbrel-dev:0.1.0
+    image: ghcr.io/willitmod/axeppc-app-umbrel-dev:0.1.1
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s

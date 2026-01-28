@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-bc2
 category: bitcoin
 name: AxeBC2
-version: "0.1.1-dev"
+version: "0.1.2-dev"
 tagline: BC2 node + solo pool
 description: >-
   Run a BitcoinII (BC2) full node and an integrated solo Stratum v1 pool (ckpool) as a single app.
@@ -70,4 +70,3 @@ backupIgnore:
   - data/node/chainstate
   - data/node/indexes
 submitter: WillItMod
-

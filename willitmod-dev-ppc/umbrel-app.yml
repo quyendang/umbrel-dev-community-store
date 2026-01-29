@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-ppc
 category: altcoin
 name: AxePPC
-version: "0.1.5-dev"
+version: "0.1.6-dev"
 tagline: PPC node + solo pool
 description: >-
   Run a Peercoin full node and a solo Stratum v1 pool (ckpool) as a single app.
@@ -16,6 +16,7 @@ description: >-
 
   Notes:
     - Payout address must be a Base58 Peercoin address.
+    - Stratum will not respond until the node finishes initial sync.
     - ALPHA: expect breaking changes while this is being tested on Umbrel/5tratumOS.
 developer: WillItMod
 website: https://github.com/WillItMod/AxePPC

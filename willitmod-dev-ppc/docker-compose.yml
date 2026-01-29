@@ -21,6 +21,8 @@ services:
       PPC_RPC_PORT: "9902"
       PPC_P2P_PORT: "9901"
       PPC_ZMQ_HASHBLOCK_PORT: "28336"
+      CPS_WEBSITE_PORT: "8080"
+      CPS_STRATUM_PORT: "3333"
       PAYOUT_ADDRESS: "CHANGEME_PPC_PAYOUT_ADDRESS"
     command:
       - /bin/sh
@@ -46,10 +48,10 @@ services:
           mv "$$tmp" "$$envfile"
         fi
 
-        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users /data/templates
+        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users /data/pool/cps/pool_configs /data/templates
 
-        if [ ! -f "$$tpl_dir/peercoin.conf.template" ] || [ ! -f "$$tpl_dir/ckpool.conf.template" ]; then
-          echo "Template files not found in $$tpl_dir. (Expected peercoin.conf.template and ckpool.conf.template)"
+        if [ ! -f "$$tpl_dir/peercoin.conf.template" ] || [ ! -f "$$tpl_dir/ckpool.conf.template" ] || [ ! -f "$$tpl_dir/cps-config.json.template" ] || [ ! -f "$$tpl_dir/cps-peercoin.json.template" ]; then
+          echo "Template files not found in $$tpl_dir. (Expected peercoin.conf.template, ckpool.conf.template, cps-config.json.template, cps-peercoin.json.template)"
           echo "Contents of $$tpl_dir:"
           ls -la "$$tpl_dir" || true
           exit 1
@@ -118,6 +120,16 @@ services:
           fi
         fi
 
+        # cryptocurrency-pool-server (NOMP) config
+        if [ ! -f /data/pool/cps/config.json ]; then
+          envsubst < "$$tpl_dir/cps-config.json.template" > /data/pool/cps/config.json
+          chown -R 1000:1000 /data/pool/cps || true
+        fi
+        if [ ! -f /data/pool/cps/pool_configs/peercoin.json ]; then
+          envsubst < "$$tpl_dir/cps-peercoin.json.template" > /data/pool/cps/pool_configs/peercoin.json
+          chown -R 1000:1000 /data/pool/cps || true
+        fi
+
   ppcd:
     build:
       context: ${APP_DATA_DIR}/data/peercoind
@@ -129,40 +141,27 @@ services:
     volumes:
       - ${APP_DATA_DIR}/data/node:/data
 
-  ckpool:
-    image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  pool:
+    image: ghcr.io/willitmod/axeppc-pool:0.2.0
     user: "1000:1000"
-    restart: on-failure
+    restart: unless-stopped
     depends_on:
       - ppcd
+      - redis
       - init
     stop_grace_period: 30s
-    init: true
     ports:
       - "8765:3333/tcp"
     volumes:
-      - ${APP_DATA_DIR}/data/pool/config:/config:ro
-      - ${APP_DATA_DIR}/data/pool/www:/www
-    entrypoint:
-      - /bin/sh
-      - -ec
-      - |-
-        set -eu
-        rm -f /tmp/ckpool/*.pid 2>/dev/null || true
-        ARGS="$(cat /config/ckpool.args 2>/dev/null || true)"
-        if command -v ckpool >/dev/null 2>&1; then
-          exec ckpool -k -L -c /config/ckpool.conf $$ARGS
-        elif [ -x /bin/ckpool ]; then
-          exec /bin/ckpool -k -L -c /config/ckpool.conf $$ARGS
-        elif [ -x /usr/bin/ckpool ]; then
-          exec /usr/bin/ckpool -k -L -c /config/ckpool.conf $$ARGS
-        else
-          echo "ckpool binary not found in image"
-          exit 127
-        fi
+      - ${APP_DATA_DIR}/data/pool/cps/config.json:/app/config.json:ro
+      - ${APP_DATA_DIR}/data/pool/cps/pool_configs:/app/pool_configs:ro
 
   app:
-    image: ghcr.io/willitmod/axeppc-app-umbrel-dev:0.1.6
+    image: ghcr.io/willitmod/axeppc-app-umbrel-dev:0.2.0
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s
@@ -181,15 +180,16 @@ services:
       APP_CHANNEL: "DEV"
       APP_VERSION_SUFFIX: "-dev"
       PPCD_IMAGE: "ghcr.io/willitmod/peercoin-core:0.15.1ppc"
-      CKPOOL_IMAGE: "ghcr.io/willitmod/docker-ckpool-solo:590fb2a"
       PPC_RPC_HOST: "ppcd"
       PPC_RPC_PORT: "9902"
       PPC_RPC_USER: "ppc"
       PPC_RPC_PASS: "${APP_PASSWORD}"
-      CKPOOL_STATUS_DIR: "/data/pool/www/pool"
-      CKPOOL_USERS_DIR: "/data/pool/www/users"
-      CKPOOL_LOG_PATH: "/data/pool/www/ckpool.log"
-      CKPOOL_CONF_PATH: "/data/pool/config/ckpool.conf"
+      POOL_BACKEND: "cps"
+      POOL_IMAGE: "ghcr.io/willitmod/axeppc-pool:0.2.0"
+      POOL_STATS_URL: "http://pool:8080/api/stats"
+      POOL_STRATUM_HOST: "pool"
+      POOL_STRATUM_PORT: "3333"
+      POOL_CFG_PATH: "/data/pool/cps/pool_configs/peercoin.json"
 
 networks:
   umbrel_main_network:

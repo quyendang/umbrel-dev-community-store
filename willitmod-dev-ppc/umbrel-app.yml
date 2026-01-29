@@ -2,10 +2,10 @@ manifestVersion: 1
 id: willitmod-dev-ppc
 category: altcoin
 name: AxePPC
-version: "0.1.6-dev"
+version: "0.2.0-dev"
 tagline: PPC node + solo pool
 description: >-
-  Run a Peercoin full node and a solo Stratum v1 pool (ckpool) as a single app.
+  Run a Peercoin full node and a solo Stratum v1 pool as a single app.
 
 
   Miner connection:

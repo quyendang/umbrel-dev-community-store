@@ -1,0 +1,17 @@
+server=1
+rpcuser=${RPC_USER}
+rpcpassword=${RPC_PASSWORD}
+rpcallowip=127.0.0.1/32
+rpcallowip=${APPS_SUBNET}
+rpcallowip=10.0.0.0/8
+rpcallowip=172.16.0.0/12
+rpcallowip=192.168.0.0/16
+rpcport=${FBTC_RPC_PORT}
+rpcbind=0.0.0.0
+prune=50000
+addnode=seed.fractalbitcoin.io
+addnode=seed1.fractalbitcoin.io
+addnode=seed2.fractalbitcoin.io
+addnode=seed3.fractalbitcoin.io
+addnode=seed4.fractalbitcoin.io
+dbcache=4096

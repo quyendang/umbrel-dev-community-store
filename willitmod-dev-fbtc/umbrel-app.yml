@@ -22,9 +22,9 @@ repo: https://github.com/WillItMod/umbrel-dev-community-store
 support: https://github.com/fractal-bitcoin/fractald-release/issues
 dependencies: []
 port: 21225
-icon: "https://raw.githubusercontent.com/WillItMod/umbrel-dev-community-store/main/willitmod-dev-fbtc/icon.png"
+icon: "https://raw.githubusercontent.com/quyendang/umbrel-dev-community-store/main/willitmod-dev-fbtc/icon.png"
 gallery:
-  - "https://raw.githubusercontent.com/WillItMod/umbrel-dev-community-store/main/willitmod-dev-fbtc/icon.png"
+  - "https://raw.githubusercontent.com/quyendang/umbrel-dev-community-store/main/willitmod-dev-fbtc/icon.png"
 path: ""
 defaultUsername: ""
 defaultPassword: ""

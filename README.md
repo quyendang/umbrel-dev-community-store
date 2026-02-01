@@ -11,6 +11,7 @@ Development/test app store for WillItMod apps.
 - **DigiByte** (`willitmod-dev-dgb`): DigiByte Core full node + solo Stratum v1 pool (ckpool) in a single app (experimental).
 - **eCash** (`willitmod-dev-xec`): eCash (XEC) full node + solo Stratum v1 pool (ckpool) in a single app.
 - **Peercoin** (`willitmod-dev-ppc`): Peercoin full node + solo Stratum v1 pool (ckpool) in a single app.
+- **Fractal Bitcoin** (`willitmod-dev-fbtc`): Fractal Bitcoin (FBTC) full node + solo Stratum v1 pool (ckpool) in a single app (amd64-only).
 - **AxeMIG** (`willitmod-dev-axemig`): data-only blockchain migration tool (experimental).
 
 ## Quick setup (solo mining)
@@ -25,6 +26,7 @@ Development/test app store for WillItMod apps.
    - DGB (Scrypt): `stratum+tcp://<host-ip>:5679`
    - XEC: `stratum+tcp://<host-ip>:4321`
    - PPC: `stratum+tcp://<host-ip>:9876`
+   - FBTC (Fractal Bitcoin): `stratum+tcp://<host-ip>:8334`
 
 ## Address format notes
 
@@ -49,4 +51,5 @@ Use a DigiByte address (typically Base58 `D...` / `S...` or Bech32 `dgb1...`).
 - BC2 node runs from `ghcr.io/willitmod/bitcoinii-core` (pinned by version tag in `docker-compose.yml`).
 - XEC node is built locally from official Bitcoin ABC release tarballs (pinned by version in `data/xecd/Dockerfile`).
 - PPC node runs from `ghcr.io/willitmod/peercoin-core` (pinned by version tag in `docker-compose.yml`).
+- Fractal Bitcoin node is built from official fractald-release tarball (v0.2.9rc2, amd64 only) in `willitmod-dev-fbtc/data/fractald/Dockerfile`.
 - This store repo does not patch upstream source code; it only orchestrates upstream components via Docker images (some are built from official release tarballs).

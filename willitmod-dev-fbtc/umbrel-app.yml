@@ -1,0 +1,36 @@
+manifestVersion: 1
+id: willitmod-dev-fbtc
+category: bitcoin
+name: Fractal Bitcoin
+version: "0.2.9-dev"
+tagline: FBTC full node + solo pool
+description: >-
+  Run a Fractal Bitcoin (FBTC) full node and an integrated solo Stratum v1 pool (ckpool) as a single app.
+
+  Miner connection:
+    - URL: `stratum+tcp://<your-host-ip>:8334`
+    - Username: worker name (optional)
+    - Password: anything
+
+  Notes:
+    - Initial sync can take time and bandwidth/storage.
+    - Set your payout address in the app Settings tab (or in pool config).
+    - Node is built from official Fractal Bitcoin release (amd64 only).
+developer: WillItMod
+website: https://github.com/fractal-bitcoin/fractald-release
+repo: https://github.com/WillItMod/umbrel-dev-community-store
+support: https://github.com/fractal-bitcoin/fractald-release/issues
+dependencies: []
+port: 21225
+icon: "https://raw.githubusercontent.com/WillItMod/umbrel-dev-community-store/main/willitmod-dev-fbtc/icon.png"
+gallery:
+  - "https://raw.githubusercontent.com/WillItMod/umbrel-dev-community-store/main/willitmod-dev-fbtc/icon.png"
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+widgets: []
+backupIgnore:
+  - data/node/blocks
+  - data/node/chainstate
+  - data/node/indexes
+submitter: WillItMod

@@ -1,0 +1,147 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: axefbtc-app
+      APP_PORT: 80
+      JWT_SECRET: "${JWT_SECRET}"
+    networks:
+      - umbrel_main_network
+
+  init:
+    image: alpine:3.22.1
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+      - ${APP_DATA_DIR}:/appdata
+      - ${APP_DATA_DIR}/data/templates:/data/templates:rw
+    environment:
+      APPS_SUBNET: "${NETWORK_IP}/16"
+      RPC_USER: "quyen"
+      RPC_PASSWORD: "${APP_PASSWORD}"
+      FBTC_RPC_PORT: "8332"
+      PAYOUT_ADDRESS: "CHANGEME_FBTC_PAYOUT_ADDRESS"
+    command:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+
+        apk add --no-cache envsubst jq >/dev/null
+
+        # Persist JWT secret for app_proxy (SSH restarts may not have exports.sh).
+        if [ -n "$${JWT_SECRET:-}" ]; then
+          envfile="/appdata/.env"
+          tmp="/appdata/.env.tmp"
+          if [ -f "$$envfile" ]; then
+            grep -v '^JWT_SECRET=' "$$envfile" > "$$tmp" || true
+          else
+            : > "$$tmp"
+          fi
+          printf "JWT_SECRET=%s\n" "$$JWT_SECRET" >> "$$tmp"
+          chmod 600 "$$tmp" || true
+          chown 1000:1000 "$$tmp" || true
+          mv "$$tmp" "$$envfile"
+        fi
+
+        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users /data/www
+        chmod +x /data/templates/fractald-entrypoint.sh /data/templates/ckpool-entrypoint.sh 2>/dev/null || true
+        chown -R 1000:1000 /data/templates/fractald-entrypoint.sh /data/templates/ckpool-entrypoint.sh 2>/dev/null || true
+
+        touch /appdata/settings.yml
+        chown 1000:1000 /appdata/settings.yml || true
+
+        if [ ! -f /data/node/bitcoin.conf ]; then
+          envsubst < /data/templates/bitcoin.conf.template > /data/node/bitcoin.conf
+          chown -R 1000:1000 /data/node
+        fi
+
+        if [ ! -f /data/pool/config/ckpool.conf ]; then
+          envsubst < /data/templates/ckpool.conf.template > /data/pool/config/ckpool.conf
+          chown -R 1000:1000 /data/pool
+        else
+          # Preserve existing payout address when upgrading template
+          existing_addr="$$(jq -r '.btcaddress // empty' /data/pool/config/ckpool.conf 2>/dev/null || true)"
+          if [ -n "$$existing_addr" ] && [ "$$existing_addr" != "CHANGEME_FBTC_PAYOUT_ADDRESS" ]; then
+            export PAYOUT_ADDRESS="$$existing_addr"
+          fi
+          envsubst < /data/templates/ckpool.conf.template > /data/pool/config/ckpool.conf
+          chown -R 1000:1000 /data/pool
+        fi
+
+        if [ ! -f /data/pool/config/ckpool.args ]; then
+          echo "-B" > /data/pool/config/ckpool.args
+          chown 1000:1000 /data/pool/config/ckpool.args || true
+        fi
+
+        # Static info page for Umbrel app UI
+        cat > /data/www/index.html << 'HTMLEOF'
+        <!DOCTYPE html>
+        <html><head><meta charset="utf-8"><title>Fractal Bitcoin</title></head>
+        <body style="font-family:sans-serif;max-width:640px;margin:2em auto;padding:0 1em;">
+        <h1>Fractal Bitcoin – Solo Pool</h1>
+        <p><strong>Stratum URL:</strong> <code>stratum+tcp://YOUR_HOST_IP:8334</code></p>
+        <p>Username: worker name (optional). Password: anything.</p>
+        <p>Set your payout address in the app Settings (or edit pool config).</p>
+        <p>Pool stats (if available): <a href="/pool/">/pool/</a></p>
+        </body></html>
+        HTMLEOF
+        chown -R 1000:1000 /data/www
+
+  # Fractal node: use official image from Docker Hub (fractald-release project).
+  # Alternative: build from tarball – uncomment "build" and comment "image", use data/fractald/Dockerfile.
+  fractald:
+    image: fractalbitcoin/fractal:v0.2.9rc2
+    user: "1000:1000"
+    restart: unless-stopped
+    stop_grace_period: 5m
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    volumes:
+      - ${APP_DATA_DIR}/data/node:/data
+      - ${APP_DATA_DIR}/data/templates/fractald-entrypoint.sh:/fractald-entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/fractald-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "bitcoin-cli -datadir=/data getblockchaininfo >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 2m
+
+  ckpool:
+    image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
+    user: "1000:1000"
+    depends_on:
+      - fractald
+    restart: on-failure
+    stop_grace_period: 30s
+    ports:
+      - "8334:3333/tcp"
+    volumes:
+      - ${APP_DATA_DIR}/data/pool/config:/config:ro
+      - ${APP_DATA_DIR}/data/pool/www:/www
+      - ${APP_DATA_DIR}/data/templates/ckpool-entrypoint.sh:/ckpool-entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/ckpool-entrypoint.sh"]
+
+  app:
+    image: nginx:alpine
+    restart: on-failure
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    networks:
+      default:
+        aliases:
+          - axefbtc-app
+      umbrel_main_network:
+        aliases:
+          - axefbtc-app
+    volumes:
+      - ${APP_DATA_DIR}/data/www:/usr/share/nginx/html:ro
+    command: ["nginx", "-g", "daemon off;"]
+
+networks:
+  umbrel_main_network:
+    external: true
+    name: umbrel_main_network

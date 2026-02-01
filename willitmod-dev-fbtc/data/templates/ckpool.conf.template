@@ -1,0 +1,19 @@
+{
+  "btcd": [
+    {
+      "url": "fractald:${FBTC_RPC_PORT}",
+      "auth": "${RPC_USER}",
+      "pass": "${RPC_PASSWORD}"
+    }
+  ],
+  "btcaddress": "${PAYOUT_ADDRESS}",
+  "btcsig": null,
+  "blockpoll": 100,
+  "update_interval": 30,
+  "serverurl": ["0.0.0.0:3333"],
+  "logdir": "/www",
+  "webdir": "/www/pool",
+  "userdir": "/www/users",
+  "longpoll": true,
+  "mindiff": 20000
+}

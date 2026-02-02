@@ -4,7 +4,7 @@ services:
   app_proxy:
     environment:
       APP_HOST: axefbtc-app
-      APP_PORT: 80
+      APP_PORT: 3000
       JWT_SECRET: "${JWT_SECRET}"
     networks:
       - umbrel_main_network
@@ -125,11 +125,13 @@ services:
     entrypoint: ["/bin/sh", "/ckpool-entrypoint.sh"]
 
   app:
-    image: nginx:alpine
+    image: ghcr.io/willitmod/axebch-app-umbrel-dev:0.7.151
+    user: "1000:1000"
     restart: on-failure
+    stop_grace_period: 30s
     depends_on:
-      init:
-        condition: service_completed_successfully
+      - fractald
+      - ckpool
     networks:
       default:
         aliases:
@@ -138,8 +140,19 @@ services:
         aliases:
           - axefbtc-app
     volumes:
-      - ${APP_DATA_DIR}/data/www:/usr/share/nginx/html:ro
-    command: ["nginx", "-g", "daemon off;"]
+      - ${APP_DATA_DIR}/data:/data
+    environment:
+      NETWORK_IP: "${NETWORK_IP}"
+      BCH_RPC_HOST: "fractald"
+      BCH_RPC_PORT: "8332"
+      BCH_RPC_USER: "quyen"
+      BCH_RPC_PASS: "${APP_PASSWORD}"
+      CKPOOL_STATUS_DIR: "/data/pool/www/pool"
+      APP_CHANNEL: "DEV"
+      APP_VERSION_SUFFIX: "-dev"
+      BCHN_IMAGE: "fractalbitcoin/fractal:v0.2.9rc2"
+      CKPOOL_IMAGE: "ghcr.io/willitmod/docker-ckpool-solo:590fb2a"
+      STATIC_DIR: "/app/static"
 
 networks:
   umbrel_main_network:

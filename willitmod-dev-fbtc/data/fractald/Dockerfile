@@ -2,7 +2,7 @@
 # https://github.com/fractal-bitcoin/fractald-release/releases
 FROM debian:bookworm-slim
 
-ARG FRACTALD_VERSION=0.2.9rc2
+ARG FRACTALD_VERSION=0.3.0
 ARG TARGETARCH
 
 # Fractal Bitcoin only provides x86_64-linux-gnu tarball.

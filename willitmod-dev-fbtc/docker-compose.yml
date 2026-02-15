@@ -91,7 +91,7 @@ services:
   # Fractal node: use official image from Docker Hub (fractald-release project).
   # Alternative: build from tarball – uncomment "build" and comment "image", use data/fractald/Dockerfile.
   fractald:
-    image: fractalbitcoin/fractal:v0.2.9rc2
+    image: fractalbitcoin/fractal:v0.3.0
     user: "1000:1000"
     restart: unless-stopped
     stop_grace_period: 5m
@@ -150,7 +150,7 @@ services:
       CKPOOL_STATUS_DIR: "/data/pool/www/pool"
       APP_CHANNEL: "DEV"
       APP_VERSION_SUFFIX: "-dev"
-      BCHN_IMAGE: "fractalbitcoin/fractal:v0.2.9rc2"
+      BCHN_IMAGE: "fractalbitcoin/fractal:v0.3.0"
       CKPOOL_IMAGE: "ghcr.io/willitmod/docker-ckpool-solo:590fb2a"
       STATIC_DIR: "/app/static"
 

@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-dev-fbtc
 category: bitcoin
 name: Fractal Bitcoin
-version: "0.3.0-dev"
+version: "0.3.0-dev-pro"
 tagline: FBTC full node + solo pool
 description: >-
   Run a Fractal Bitcoin (FBTC) full node and an integrated solo Stratum v1 pool (ckpool) as a single app.

@@ -20,6 +20,7 @@ services:
       RPC_USER: "quyen"
       RPC_PASSWORD: "${APP_PASSWORD}"
       FBTC_RPC_PORT: "8332"
+      FBTC_ZMQ_HASHBLOCK_PORT: "8335"
       PAYOUT_ADDRESS: "CHANGEME_FBTC_PAYOUT_ADDRESS"
     command:
       - /bin/sh
@@ -54,6 +55,13 @@ services:
         if [ ! -f /data/node/bitcoin.conf ]; then
           envsubst < /data/templates/bitcoin.conf.template > /data/node/bitcoin.conf
           chown -R 1000:1000 /data/node
+        fi
+
+        if [ -f /data/node/bitcoin.conf ] && ! grep -q '^zmqpubhashblock=' /data/node/bitcoin.conf; then
+          echo "" >> /data/node/bitcoin.conf
+          echo "# ZMQ (for pool notifications)" >> /data/node/bitcoin.conf
+          echo "zmqpubhashblock=tcp://0.0.0.0:$${FBTC_ZMQ_HASHBLOCK_PORT}" >> /data/node/bitcoin.conf
+          chown 1000:1000 /data/node/bitcoin.conf
         fi
 
         if [ ! -f /data/pool/config/ckpool.conf ]; then

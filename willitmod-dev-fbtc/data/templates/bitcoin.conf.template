@@ -15,3 +15,4 @@ addnode=seed2.fractalbitcoin.io
 addnode=seed3.fractalbitcoin.io
 addnode=seed4.fractalbitcoin.io
 dbcache=4096
+zmqpubhashblock=tcp://0.0.0.0:${FBTC_ZMQ_HASHBLOCK_PORT}
